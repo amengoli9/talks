@@ -15,4 +15,9 @@ public class DrinkService(ILogger<DrinkService> logger, IDrinkRepository reposit
       return repository.GetAll();
    }
 
+   public async Task<IEnumerable<Drink>> GetAllErrorAsync()
+   {
+      return await repository.GetAllNoEFErrorAsync();
+   }
+
 }

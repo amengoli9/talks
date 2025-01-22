@@ -5,6 +5,7 @@ using OpenTelemetry.Trace;
 using KitchenApp.Domain.Models;
 using KitchenApp.Infrastructure.Data;
 using KitchenApp.Utilities;
+using System.Diagnostics;
 
 namespace KitchenApp.Infrastructure;
 
@@ -12,15 +13,25 @@ public class DrinkRepository(ILogger<DrinkRepository> logger, KitchenContext con
 {
    public IEnumerable<Drink> GetAll()
    {
-      var dishes = context.Drinks.ToList();
-      return dishes;
+      var drinks = context.Drinks.ToList();
+
+      return drinks;
    }
 
    public async Task<IEnumerable<Drink>> GetAllAsync()
    {
-      var dishes = await context.Drinks.ToListAsync();
-      return dishes;
+      var drinks = context.Drinks.ToList();
+      await Task.Delay(10);
+      return drinks;
    }
+
+   public async Task<IEnumerable<Drink>> GetAllErrorAsync()
+   {
+      var drinks = context.Drinks.ToList();
+      await Task.Delay(10);
+      return drinks;
+   }
+
 
    public async Task<IEnumerable<Drink>> GetAllNoEFAsync()
    {
@@ -84,7 +95,19 @@ public class DrinkRepository(ILogger<DrinkRepository> logger, KitchenContext con
       }
       catch (Exception ex)
       {
-         //logger.LogAppError(ex.Message, ex);
+         logger.LogAppError(ex.Message, ex);
+         Activity.Current?.SetStatus(ActivityStatusCode.Error);
+         var tags = new ActivityTagsCollection
+                    {
+                        { "exception.type", ex.GetType().FullName },
+                        { "exception.message", ex.Message },
+                        { "exception.stacktrace", ex.StackTrace }
+                    };
+
+         Activity.Current?.AddEvent(new ActivityEvent(
+             name: "exception",
+             tags: tags));
+
          throw;
       }
       

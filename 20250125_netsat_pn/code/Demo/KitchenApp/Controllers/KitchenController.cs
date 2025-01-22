@@ -25,6 +25,15 @@ public class KitchenController(ILogger<KitchenController> logger, IDishService d
       return Ok(drinks);
    }
 
+
+   [HttpGet("drinksError")]
+   public async Task<IActionResult> GetDrinksErrorAsync()
+   {
+      var drinks = await drinkService.GetAllErrorAsync();
+      return Ok(drinks);
+   }
+
+
    [HttpGet("drinksSync")]
    public IActionResult GetDrinks()
    {

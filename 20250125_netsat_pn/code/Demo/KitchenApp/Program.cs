@@ -8,6 +8,7 @@ using KitchenApp.Infrastructure;
 using KitchenApp.Infrastructure.Data;
 using System.Reflection;
 using KitchenApp.Utilities;
+using OpenTelemetry.Exporter;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -100,7 +101,11 @@ builder.Logging.AddOpenTelemetry(otel => {
    otel.IncludeScopes = true;
    otel.IncludeFormattedMessage = true;
    otel.AddConsoleExporter();
-   otel.AddOtlpExporter();
+   otel.AddOtlpExporter(); 
+   otel.AddOtlpExporter(exporter => {
+      exporter.Endpoint = new Uri("http://localhost:5341/ingest/otlp/v1/logs");
+      exporter.Protocol = OtlpExportProtocol.HttpProtobuf;
+   });
 }
 );
 #endregion

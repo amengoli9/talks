@@ -6,6 +6,7 @@ namespace KitchenApp.Domain
    {
       Task<IEnumerable<Drink>> GetAllAsync();
       IEnumerable<Drink> GetAll();
+      Task<IEnumerable<Drink>> GetAllErrorAsync();
 
    }
 }

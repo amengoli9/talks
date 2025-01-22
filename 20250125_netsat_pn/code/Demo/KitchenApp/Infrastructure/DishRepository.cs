@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using KitchenApp.Domain.Models;
 using KitchenApp.Infrastructure.Data;
 using KitchenApp.Utilities;
+using System.Diagnostics;
 
 namespace KitchenApp.Infrastructure;
 
@@ -18,8 +19,35 @@ public class DishRepository(ILogger<DishRepository> logger, KitchenContext conte
 
    public async Task<IEnumerable<Dish>> GetAllAsync()
    {
-      using var activity = ApplicationDiagnostics.ActivitySource.StartActivity("Dishes.GetAllAsync");
+
+      #region base activity
+      //using var activity = ApplicationDiagnostics.ActivitySource.StartActivity("KitchenService.GetDishes");
+      #endregion
+
+      #region activitysourceextension
+
+      //using var activity = ApplicationDiagnostics.ActivitySource.StartActivityWithTags("KitchenService.GetDishes",
+      //   new() {
+      //      new("kitchen.operation.type", "get_dishes")
+      //      });
+      #endregion
+
+      #region commonname
+      using var activity = ApplicationDiagnostics.ActivitySource.StartActivityWithTags(KitchenDiagnosticsSemanticNames.GetDrinksActivityName,
+   new() {
+               new(KitchenDiagnosticsSemanticNames.OperationType, KitchenDiagnosticsValues.Operations.GetDishes)
+      });
+      #endregion
+
       var dishes = context.Dishes.ToList();
+      logger.LogInformation("Retrieved {DishCount} dishes", dishes.Count);
+      foreach (var dish in dishes)
+      {
+         logger.LogDishInfo("Get dish", dish);
+      }
+      Activity.Current?.AddTag("dish.count", dishes.Count());
+
+      
       await Task.Delay(100);
       return dishes;
    }
