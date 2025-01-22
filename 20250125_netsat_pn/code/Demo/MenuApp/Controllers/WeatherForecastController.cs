@@ -1,3 +1,4 @@
+using Menu.Utilities;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics.Metrics;
 
@@ -34,9 +35,8 @@ namespace MenuApp.Controllers
          {
             _logger.LogInformation("Generated weather forecast: {summary} and {temperature}", item.Summary, item.TemperatureC);
          }
+         ApplicationDiagnostics.FreezingDaysCounter.Add(toRet.Count(f => f.TemperatureC < 0));
 
-         //meter counter con chiamate di pioggia
-         // numero cappelletti al ragù ordinati
          return toRet;
       }
    }

@@ -47,7 +47,8 @@ public class DishRepository(ILogger<DishRepository> logger, KitchenContext conte
       }
       Activity.Current?.AddTag("dish.count", dishes.Count());
 
-      
+      //ApplicationDiagnostics.DishesCounter.Add(dishes.Count());
+      ApplicationDiagnostics.cappellettiGauge.Record((DateTime.Now.Second));
       await Task.Delay(100);
       return dishes;
    }

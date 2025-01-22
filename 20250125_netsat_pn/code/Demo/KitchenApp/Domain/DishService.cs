@@ -7,6 +7,7 @@ public class DishService(ILogger<DishService> logger, IDishRepository repository
 {
    public async Task<IEnumerable<Dish>> GetAllAsync()
    {
+      
       return await repository.GetAllAsync();
    }
 

@@ -9,6 +9,7 @@ using KitchenApp.Infrastructure.Data;
 using System.Reflection;
 using KitchenApp.Utilities;
 using OpenTelemetry.Exporter;
+using OpenTelemetry.Metrics;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -89,7 +90,12 @@ builder.Services.AddOpenTelemetry().ConfigureResource(resource => resource
          .AddConsoleExporter()
          .AddOtlpExporter()
          .AddOtlpExporter(cfg => cfg.Endpoint = new Uri("http://localhost:4318"))
-         );
+         )
+      .WithMetrics(metrics => metrics
+            .AddMeter(ApplicationDiagnostics.MeterName)
+            .AddOtlpExporter()
+            .AddConsoleExporter()
+            );
 #endregion 
 
 

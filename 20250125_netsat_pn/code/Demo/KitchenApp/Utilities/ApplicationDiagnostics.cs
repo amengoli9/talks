@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Diagnostics.Metrics;
 
 namespace KitchenApp.Utilities;
 
@@ -11,10 +12,15 @@ public static class ApplicationDiagnostics
 
    public static readonly string DishAttribute = "kitchenapp.dish.id";
 
+   public static readonly string MeterName = "KitchenApp.Metrics";
 
+   public static Meter meter = new Meter(MeterName);
+
+   //public static readonly Counter<long> DishesCounter = meter.CreateCounter<long>("dishes_counter");
+
+   public static readonly Gauge<int> cappellettiGauge = meter.CreateGauge<int>("cappelletti_gauge");
 
 }
-
 
 public static class ActivityExtensions
 {
@@ -54,7 +60,6 @@ public static class KitchenDiagnosticsValues
       public const string GetDishes = "get_dishes";
       public const string GetDrinks = "get_drinks";
    }
-
    public static class Categories
    {
       public const string Dish = "dish";

@@ -1,3 +1,4 @@
+using Menu.Utilities;
 using Microsoft.Extensions.Options;
 using OpenTelemetry;
 using OpenTelemetry.Exporter;
@@ -25,34 +26,25 @@ builder.Services.AddOpenTelemetry()
         );
 #region 1-SimpleTrace
 
-
-
-builder.Services.AddOpenTelemetry()
-   .WithTracing(trace => trace
-      .AddAspNetCoreInstrumentation()
-      .AddConsoleExporter()
-      .AddOtlpExporter())
-   ;
-
 //builder.Services.AddOpenTelemetry()
-//      .WithTracing(tracing =>
-//         tracing
-//            .AddAspNetCoreInstrumentation()
-//            .AddConsoleExporter());
+//   .WithTracing(trace => trace
+//      .AddAspNetCoreInstrumentation()
+//      .AddConsoleExporter()
+//      .AddOtlpExporter());
 
 #endregion
 
 #region 2-TraceWithResource
-builder.Services.AddOpenTelemetry()
-   .ConfigureResource(resource => resource
-      .AddService(serviceName: "MenuApp", serviceVersion: "1.0.0.0"))
-   .WithTracing(metrics => metrics
-         .AddAspNetCoreInstrumentation()
-         .AddHttpClientInstrumentation()
-         .AddConsoleExporter()
-         .AddOtlpExporter()
-         .AddOtlpExporter(conf => { conf.Protocol = OtlpExportProtocol.Grpc; conf.Endpoint = new Uri("http://localhost:4318"); })
-      );
+//builder.Services.AddOpenTelemetry()
+//   .ConfigureResource(resource => resource
+//      .AddService(serviceName: "MenuApp", serviceVersion: "1.0.0.0"))
+//   .WithTracing(metrics => metrics
+//         .AddAspNetCoreInstrumentation()
+//         .AddHttpClientInstrumentation()
+//         .AddConsoleExporter()
+//         .AddOtlpExporter()
+//         .AddOtlpExporter(conf => { conf.Protocol = OtlpExportProtocol.Grpc; conf.Endpoint = new Uri("http://localhost:4318"); })
+//      );
 #endregion
 
 
@@ -63,6 +55,7 @@ builder.Services.AddOpenTelemetry().ConfigureResource(resource => resource
          .AddAspNetCoreInstrumentation()
          .AddMeter("Microsoft.AspNetCore.Hosting")
          .AddMeter("Microsoft.AspNetCore.Server.Kestrel")
+         .AddMeter(ApplicationDiagnostics.MeterName)
          .AddConsoleExporter()
          .AddOtlpExporter()
       );
