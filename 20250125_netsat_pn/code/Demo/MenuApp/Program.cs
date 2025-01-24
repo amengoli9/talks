@@ -16,14 +16,18 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHttpClient();
 
-
-
 builder.Services.AddOpenTelemetry()
-   .WithTracing(tracing => tracing
-         .AddAspNetCoreInstrumentation()
-         .AddOtlpExporter()
-         .AddConsoleExporter()
-        );
+   .WithTracing(trace =>
+      trace
+      .ConfigureResource(resource => resource
+         .AddService(serviceName: "MenuApp", serviceVersion: "1.2.3"))
+      .AddAspNetCoreInstrumentation()
+
+      .AddConsoleExporter()
+      .AddOtlpExporter()
+   );
+
+
 #region 1-SimpleTrace
 
 //builder.Services.AddOpenTelemetry()
@@ -93,7 +97,7 @@ builder.Services.AddOpenTelemetry().ConfigureResource(resource => resource
 builder.Logging.ClearProviders();
 builder.Logging.AddOpenTelemetry(otel =>
 {
-   otel.SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(serviceName: "MenuApp",serviceVersion: "1.2.3"));
+   otel.SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(serviceName: "MenuApp", serviceVersion: "1.2.3"));
    otel.IncludeScopes = true;
    otel.IncludeFormattedMessage = true;
    otel.AddConsoleExporter();

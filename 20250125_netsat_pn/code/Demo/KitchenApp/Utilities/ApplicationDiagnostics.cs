@@ -16,8 +16,6 @@ public static class ApplicationDiagnostics
 
    public static Meter meter = new Meter(MeterName);
 
-   //public static readonly Counter<long> DishesCounter = meter.CreateCounter<long>("dishes_counter");
-
    public static readonly Gauge<int> cappellettiGauge = meter.CreateGauge<int>("cappelletti_gauge");
 
 }

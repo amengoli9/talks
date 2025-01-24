@@ -69,24 +69,15 @@ builder.Services.AddOpenTelemetry().ConfigureResource(resource => resource
          //.AddHttpClientInstrumentation()
          .AddSource(ApplicationDiagnostics.DataAccessSourceName)
          .AddAspNetCoreInstrumentation()
-           //.AddEntityFrameworkCoreInstrumentation(opt => {
-           //   opt.SetDbStatementForText = true;
-           //   //opt.SetDbStatementForText = true;
-           //   //opt.EnrichWithIDbCommand = (activity, command) => {
-           //   //   activity.SetParentId(activity.ParentId);
-           //   //};
-
-           //})
            .AddSqlClientInstrumentation(options =>
            {
               options.SetDbStatementForText = true;
               options.RecordException = true;
-
            })
-           .AddEntityFrameworkCoreInstrumentation(opt =>
-           {
-              opt.SetDbStatementForText = true;
-           })
+           //.AddEntityFrameworkCoreInstrumentation(opt =>
+           //{
+           //   opt.SetDbStatementForText = true;
+           //})
          .AddConsoleExporter()
          .AddOtlpExporter()
          .AddOtlpExporter(cfg => cfg.Endpoint = new Uri("http://localhost:4318"))
