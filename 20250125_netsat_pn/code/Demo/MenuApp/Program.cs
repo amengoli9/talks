@@ -16,25 +16,37 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHttpClient();
 
+//builder.Services.AddOpenTelemetry()
+//   .ConfigureResource(res => res.AddService(serviceName: "MenuApp", serviceVersion: "1.2.3"))
+//   .WithTracing(trace => trace
+//      .AddAspNetCoreInstrumentation()
+//      .AddHttpClientInstrumentation()
+//      .AddConsoleExporter()
+//      .AddOtlpExporter()
+
+
+//   )
+//   ;
+
+
+#region 1-SimpleTraceWithMultipleExporters
+
 builder.Services.AddOpenTelemetry()
    .WithTracing(trace =>
       trace
       .ConfigureResource(resource => resource
          .AddService(serviceName: "MenuApp", serviceVersion: "1.2.3"))
       .AddAspNetCoreInstrumentation()
-
+      .AddHttpClientInstrumentation()
       .AddConsoleExporter()
       .AddOtlpExporter()
+      .AddOtlpExporter(cfg => cfg.Endpoint = new Uri("http://localhost:4318"))
+      .AddOtlpExporter(cf =>
+      {
+         cf.Endpoint = new Uri("http://localhost:5341/ingest/otlp/v1/traces");
+         cf.Protocol = OtlpExportProtocol.HttpProtobuf;
+      })
    );
-
-
-#region 1-SimpleTrace
-
-//builder.Services.AddOpenTelemetry()
-//   .WithTracing(trace => trace
-//      .AddAspNetCoreInstrumentation()
-//      .AddConsoleExporter()
-//      .AddOtlpExporter());
 
 #endregion
 
@@ -47,22 +59,23 @@ builder.Services.AddOpenTelemetry()
 //         .AddHttpClientInstrumentation()
 //         .AddConsoleExporter()
 //         .AddOtlpExporter()
+//         .AddOtlpExporter(cfg => cfg.Endpoint = new Uri("http://localhost:4318"))
 //         .AddOtlpExporter(conf => { conf.Protocol = OtlpExportProtocol.Grpc; conf.Endpoint = new Uri("http://localhost:4318"); })
 //      );
 #endregion
 
 
 #region 3-MetricsWithResource
-builder.Services.AddOpenTelemetry().ConfigureResource(resource => resource
-   .AddService(serviceName: "MenuApp"))
-      .WithMetrics(metrics => metrics
-         .AddAspNetCoreInstrumentation()
-         .AddMeter("Microsoft.AspNetCore.Hosting")
-         .AddMeter("Microsoft.AspNetCore.Server.Kestrel")
-         .AddMeter(ApplicationDiagnostics.MeterName)
-         .AddConsoleExporter()
-         .AddOtlpExporter()
-      );
+//builder.Services.AddOpenTelemetry().ConfigureResource(resource => resource
+//   .AddService(serviceName: "MenuApp"))
+//      .WithMetrics(metrics => metrics
+//         .AddAspNetCoreInstrumentation()
+//         .AddMeter("Microsoft.AspNetCore.Hosting")
+//         .AddMeter("Microsoft.AspNetCore.Server.Kestrel")
+//         .AddMeter(ApplicationDiagnostics.MeterName)
+//         .AddConsoleExporter()
+//         .AddOtlpExporter()
+//      );
 
 #endregion
 
@@ -95,20 +108,20 @@ builder.Services.AddOpenTelemetry().ConfigureResource(resource => resource
 
 #region 5-ILoggingBuilderOTELProvider
 builder.Logging.ClearProviders();
-builder.Logging.AddOpenTelemetry(otel =>
-{
-   otel.SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(serviceName: "MenuApp", serviceVersion: "1.2.3"));
-   otel.IncludeScopes = true;
-   otel.IncludeFormattedMessage = true;
-   otel.AddConsoleExporter();
-   otel.AddOtlpExporter();
-   otel.AddOtlpExporter(exporter =>
-   {
-      exporter.Endpoint = new Uri("http://localhost:5341/ingest/otlp/v1/logs");
-      exporter.Protocol = OtlpExportProtocol.HttpProtobuf;
-   });
-}
-);
+//builder.Logging.AddOpenTelemetry(otel =>
+//{
+//   otel.SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(serviceName: "MenuApp", serviceVersion: "1.2.3"));
+//   otel.IncludeScopes = true;
+//   otel.IncludeFormattedMessage = true;
+//   otel.AddConsoleExporter();
+//   otel.AddOtlpExporter();
+//   otel.AddOtlpExporter(exporter =>
+//   {
+//      exporter.Endpoint = new Uri("http://localhost:5341/ingest/otlp/v1/logs");
+//      exporter.Protocol = OtlpExportProtocol.HttpProtobuf;
+//   });
+//}
+//);
 #endregion
 
 var app = builder.Build();

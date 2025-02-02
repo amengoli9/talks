@@ -74,13 +74,17 @@ builder.Services.AddOpenTelemetry().ConfigureResource(resource => resource
               options.SetDbStatementForText = true;
               options.RecordException = true;
            })
-           //.AddEntityFrameworkCoreInstrumentation(opt =>
-           //{
-           //   opt.SetDbStatementForText = true;
-           //})
+           .AddEntityFrameworkCoreInstrumentation(opt =>
+           {
+              opt.SetDbStatementForText = true;
+           })
          .AddConsoleExporter()
          .AddOtlpExporter()
          .AddOtlpExporter(cfg => cfg.Endpoint = new Uri("http://localhost:4318"))
+         .AddOtlpExporter(cf => {
+            cf.Endpoint = new Uri("http://localhost:5341/ingest/otlp/v1/traces");
+            cf.Protocol = OtlpExportProtocol.HttpProtobuf;
+         })
          )
       .WithMetrics(metrics => metrics
             .AddMeter(ApplicationDiagnostics.MeterName)

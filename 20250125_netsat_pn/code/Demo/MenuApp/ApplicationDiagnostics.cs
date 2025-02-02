@@ -12,11 +12,11 @@ public static class ApplicationDiagnostics
 
    public static readonly string DishAttribute = "kitchenapp.dish.id";
 
-   public static readonly string MeterName = "Menu.WeatherMetrics";
+   public static readonly string MeterName = "Menu.Consumations";
 
    public static Meter meter = new Meter(MeterName);
 
-   public static Counter<long> FreezingDaysCounter = meter.CreateCounter<long>("weather.days.freezing", description: "The number of days where the temperature is below freezing");
+   public static Counter<long> PiadinaConsumed = meter.CreateCounter<long>("piadina.consumed", description: "The number of piadina consumed");
 }
 
 public static class ActivityExtensions

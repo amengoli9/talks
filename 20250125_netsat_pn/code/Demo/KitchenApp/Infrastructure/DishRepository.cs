@@ -19,7 +19,7 @@ public class DishRepository(ILogger<DishRepository> logger, KitchenContext conte
 
    public async Task<IEnumerable<Dish>> GetAllAsync()
    {
-      //using var activity = ApplicationDiagnostics.ActivitySource.StartActivity("Dishes.GetAllAsync");
+      using var activity = ApplicationDiagnostics.ActivitySource.StartActivity("Dishes.GetAllAsync");
 
       //using var activityChild = ApplicationDiagnostics.ActivitySource.StartActivity("Dishes.GetAllAsyncChild");
 
@@ -35,12 +35,12 @@ public class DishRepository(ILogger<DishRepository> logger, KitchenContext conte
       //      });
       #endregion
 
-      #region commonname
-      //   using var activity = ApplicationDiagnostics.ActivitySource.StartActivityWithTags(KitchenDiagnosticsSemanticNames.GetDrinksActivityName,
-      //new() {
-      //            new(KitchenDiagnosticsSemanticNames.OperationType, KitchenDiagnosticsValues.Operations.GetDishes)
-      //   });
-      #endregion
+   //   #region commonname
+   //   using var activity = ApplicationDiagnostics.ActivitySource.StartActivityWithTags(KitchenDiagnosticsSemanticNames.GetDrinksActivityName,
+   //new() {
+   //               new(KitchenDiagnosticsSemanticNames.OperationType, KitchenDiagnosticsValues.Operations.GetDishes)
+   //   });
+   //   #endregion
 
       var dishes = context.Dishes.ToList();
       logger.LogInformation("Retrieved {DishCount} dishes", dishes.Count);
@@ -50,8 +50,7 @@ public class DishRepository(ILogger<DishRepository> logger, KitchenContext conte
       }
       Activity.Current?.AddTag("dish.count", dishes.Count());
 
-      //ApplicationDiagnostics.DishesCounter.Add(dishes.Count());
-      ApplicationDiagnostics.cappellettiGauge.Record((DateTime.Now.Second));
+      ApplicationDiagnostics.cappellettiGauge.Record(Random.Shared.Next(1, 200));
       await Task.Delay(100);
       return dishes;
    }

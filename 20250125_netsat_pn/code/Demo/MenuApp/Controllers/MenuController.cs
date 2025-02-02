@@ -1,3 +1,4 @@
+using Menu.Utilities;
 using Microsoft.AspNetCore.Mvc;
 using OpenTelemetry.Trace;
 using System.Diagnostics;
@@ -11,6 +12,9 @@ public class MenuController(ILogger<MenuController> logger, IHttpClientFactory h
    [HttpGet]
    public async Task<IActionResult> GetMenu()
    {
+      ApplicationDiagnostics.PiadinaConsumed.Add(Random.Shared.Next(1, 10));
+      string city = "Pordenone";
+      logger.LogInformation("saluti da {City}",city);
       //return await GetMenuWhenAllAsync(httpClientFactory);
       return await GetMenuSteyByStepAsync(httpClientFactory);
    }
