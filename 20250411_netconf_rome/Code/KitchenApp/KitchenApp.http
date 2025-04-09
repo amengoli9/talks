@@ -1,0 +1,6 @@
+@KitchenApp_HostAddress = http://localhost:5272
+
+GET {{KitchenApp_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
