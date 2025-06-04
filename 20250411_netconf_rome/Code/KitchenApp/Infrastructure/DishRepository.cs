@@ -19,7 +19,7 @@ public class DishRepository(ILogger<DishRepository> logger, KitchenContext conte
 
    public async Task<IEnumerable<Dish>> GetAllAsync()
    {
-      using var activity = ApplicationDiagnostics.ActivitySource.StartActivity("Dishes.GetAllAsync");
+      using var activityA = ApplicationDiagnostics.ActivitySource.StartActivity("Dishes.GetAllAsync");
 
       //using var activityChild = ApplicationDiagnostics.ActivitySource.StartActivity("Dishes.GetAllAsyncChild");
 
@@ -35,12 +35,12 @@ public class DishRepository(ILogger<DishRepository> logger, KitchenContext conte
       //      });
       #endregion
 
-   //   #region commonname
-   //   using var activity = ApplicationDiagnostics.ActivitySource.StartActivityWithTags(KitchenDiagnosticsSemanticNames.GetDrinksActivityName,
-   //new() {
-   //               new(KitchenDiagnosticsSemanticNames.OperationType, KitchenDiagnosticsValues.Operations.GetDishes)
-   //   });
-   //   #endregion
+      #region commonname
+      using var activity = ApplicationDiagnostics.ActivitySource.StartActivityWithTags(KitchenDiagnosticsSemanticNames.GetDrinksActivityName,
+   new() {
+                  new(KitchenDiagnosticsSemanticNames.OperationType, KitchenDiagnosticsValues.Operations.GetDishes)
+      });
+      #endregion
 
       var dishes = context.Dishes.ToList();
       logger.LogInformation("Retrieved {DishCount} dishes", dishes.Count);

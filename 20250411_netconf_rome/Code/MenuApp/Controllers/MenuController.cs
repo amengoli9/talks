@@ -14,6 +14,7 @@ public class MenuController(ILogger<MenuController> logger, IHttpClientFactory h
    {
       ApplicationDiagnostics.PiadinaConsumed.Add(Random.Shared.Next(1, 10));
       string city = "Roma";
+      logger.LogInformation($"Saluti non strutturati da {city}");
       logger.LogInformation("Saluti da {City}",city);
       return await GetMenuSteyByStepAsync(httpClientFactory);
    }

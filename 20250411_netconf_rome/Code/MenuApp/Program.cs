@@ -1,3 +1,4 @@
+using Azure.Monitor.OpenTelemetry.AspNetCore;
 using Menu.Utilities;
 using Microsoft.Extensions.Options;
 using OpenTelemetry;
@@ -17,9 +18,25 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddHttpClient();
 
 
+builder.Services.AddOpenTelemetry()
+      .ConfigureResource(res => res.AddService(serviceName: "MenuApp", serviceVersion: "1.0.0"))
+      .WithTracing(cfg =>
+         cfg
+         .AddAspNetCoreInstrumentation()
+         .AddConsoleExporter()
+         .AddOtlpExporter()
+         .AddOtlpExporter((otlpOptions =>
+         {
+            otlpOptions.Endpoint = new Uri("http://localhost:5080/api/default/v1/traces");
+            otlpOptions.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.HttpProtobuf;
 
-
-
+            // Autenticazione Basic per OpenObserve
+            otlpOptions.Headers = "Authorization=Basic " +
+                Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes("admin@example.com:Complexpass#123"));
+         }))
+         
+      )
+   ;
 
 #region 0-SimpleTrace
 //builder.Services.AddOpenTelemetry()
@@ -34,15 +51,15 @@ builder.Services.AddHttpClient();
 #endregion
 
 #region 1-TraceWithResource
-builder.Services.AddOpenTelemetry()
-   .ConfigureResource(resource => resource
-      .AddService(serviceName: "MenuApp", serviceVersion: "1.0.0.0"))
-   .WithTracing(metrics => metrics
-         .AddAspNetCoreInstrumentation()
-         .AddHttpClientInstrumentation()
-         .AddConsoleExporter()
-         .AddOtlpExporter()
-      );
+//builder.Services.AddOpenTelemetry()
+//   .ConfigureResource(resource => resource
+//      .AddService(serviceName: "MenuApp", serviceVersion: "1.0.0.0"))
+//   .WithTracing(metrics => metrics
+//         .AddAspNetCoreInstrumentation()
+//         .AddHttpClientInstrumentation()
+//         .AddConsoleExporter()
+//         .AddOtlpExporter()
+//      );
 #endregion
 
 
@@ -71,22 +88,24 @@ builder.Services.AddOpenTelemetry()
 
 
 #region 3-MetricsWithResource
-//builder.Services.AddOpenTelemetry().ConfigureResource(resource => resource
-//   .AddService(serviceName: "MenuApp"))
-//      .WithMetrics(metrics => metrics
-//         .AddAspNetCoreInstrumentation()
-//         .AddMeter("Microsoft.AspNetCore.Hosting")
-//         .AddMeter("Microsoft.AspNetCore.Server.Kestrel")
-//         .AddMeter(ApplicationDiagnostics.MeterName)
-//         .AddConsoleExporter()
-//         .AddOtlpExporter()
-//      );
+builder.Services.AddOpenTelemetry()
+      .ConfigureResource(resource => resource
+      .AddService(serviceName: "MenuApp", serviceVersion: "1.0.0"))
+      .WithMetrics(metrics => metrics
+         .AddAspNetCoreInstrumentation()
+         .AddMeter("Microsoft.AspNetCore.Hosting")
+         .AddMeter("Microsoft.AspNetCore.Server.Kestrel")
+         //.AddMeter(ApplicationDiagnostics.MeterName)
+         .AddConsoleExporter()
+         .AddOtlpExporter()
+      )
+      ;
 
 #endregion
 
 #region Extra-BatchExportAndFiltering
 //builder.Services.AddOpenTelemetry().ConfigureResource(resource => resource
-//   .AddService(serviceName: "MenuApp"))
+//   .AddService(serviceName: "MenuApp", serviceVersion: "1.0.0.0"))
 //      .WithMetrics(metrics => metrics
 //         .AddAspNetCoreInstrumentation()
 //         .AddMeter("Microsoft.AspNetCore.Hosting")
@@ -113,22 +132,29 @@ builder.Services.AddOpenTelemetry()
 
 #region 5-ILoggingBuilderOTELProvider
 builder.Logging.ClearProviders();
-//builder.Logging.AddOpenTelemetry(otel =>
-//{
-//   otel.SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(serviceName: "MenuApp", serviceVersion: "1.2.3"));
-//   otel.IncludeScopes = true;
-//   otel.IncludeFormattedMessage = true;
-//   otel.AddConsoleExporter();
-//   otel.AddOtlpExporter();
-//   otel.AddOtlpExporter(exporter =>
-//   {
-//      exporter.Endpoint = new Uri("http://localhost:5341/ingest/otlp/v1/logs");
-//      exporter.Protocol = OtlpExportProtocol.HttpProtobuf;
-//   });
-//}
-//);
-#endregion
+builder.Logging.AddOpenTelemetry(otel =>
+{
+   otel.SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(serviceName: "MenuApp", serviceVersion: "1.0.0.0"));
+   otel.IncludeScopes = true;
+   otel.IncludeFormattedMessage = true;
+   otel.AddConsoleExporter();
+   otel.AddOtlpExporter();
+   otel.AddOtlpExporter((otlpOptions =>
+   {
+      otlpOptions.Endpoint = new Uri("http://localhost:5080/api/default/v1/logs");
+      otlpOptions.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.HttpProtobuf;
 
+      // Autenticazione Basic per OpenObserve
+      otlpOptions.Headers = "Authorization=Basic " +
+          Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes("admin@example.com:Complexpass#123"));
+   }));
+}
+);
+#endregion
+builder.Services.AddOpenTelemetry()
+    .UseAzureMonitor(options => {
+       options.ConnectionString = "InstrumentationKey=aff1323d-bfd7-4613-bf4a-255dc81e5b14;IngestionEndpoint=https://westeurope-5.in.applicationinsights.azure.com/;LiveEndpoint=https://westeurope.livediagnostics.monitor.azure.com/;ApplicationId=6e4d20e3-a984-42b4-a735-be00dc856b34";
+    });
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
