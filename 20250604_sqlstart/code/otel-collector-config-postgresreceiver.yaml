@@ -1,0 +1,39 @@
+receivers:
+  postgresql:
+    endpoint: "host.docker.internal:5432"
+    transport: tcp
+    username: sqlstart
+    password: StrongPwd
+    databases: ["postgres"]
+    collection_interval: 10s
+    tls:
+      insecure: true
+
+
+exporters:
+  otlp:
+    endpoint: "host.docker.internal:4317"  # invia metriche al collector sulla macchina host
+    tls:
+      insecure: true
+
+processors:
+  attributes/add_custom_tags:
+    actions:
+      - key: environment
+        value: production
+        action: insert
+  resource/pg:
+    attributes:
+      - key: service.name
+        value: sqlstart2025_pgreceiver
+        action: upsert
+      - key: service.version
+        value: 1.0.0
+        action: insert
+  batch: {}
+service:
+  pipelines:
+    metrics:
+      receivers: [postgresql]
+      processors: [attributes/add_custom_tags, resource/pg, batch]
+      exporters: [otlp]

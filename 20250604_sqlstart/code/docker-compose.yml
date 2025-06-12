@@ -6,7 +6,7 @@ services:
     container_name: otel-sql-collector
     network_mode: host
     volumes:
-      - ./otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml
+      - ./otel-collector-config-complex-sqlquery-ss.yaml:/etc/otelcol-contrib/config.yaml
     ports:
       - "8888:8888"  # Porta per health check (opzionale)
     environment:

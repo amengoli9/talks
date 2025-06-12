@@ -1,0 +1,90 @@
+receivers:
+  sqlquery:
+    driver: "sqlserver"
+    collection_interval: 60s
+    datasource: "sqlserver://sqlstart:StrongPwd@localhost:57174"
+    queries:
+      - sql: "SELECT count(*) as connection_count FROM sys.dm_exec_connections"
+        metrics:
+          - metric_name: "sqlserver_active_connections"
+            value_column: "connection_count"
+            data_type: "gauge"
+          - metric_name: "sqlserver_total_connections"
+            value_column: "connection_count"
+            data_type: "gauge"
+      - sql: "SELECT COUNT(*) AS connection_count FROM sys.dm_exec_connections"
+        metrics:
+          - metric_name: "sqlserver_active_connections"
+            value_column: "connection_count"
+            data_type: "gauge"
+      - sql: "SELECT COUNT(*) AS user_sessions FROM sys.dm_exec_sessions WHERE is_user_process = 1"
+        metrics:
+          - metric_name: "sqlserver_user_sessions"
+            value_column: "user_sessions"
+            data_type: "gauge"
+      - sql: "SELECT COUNT(*) AS blocking_sessions FROM sys.dm_exec_requests WHERE blocking_session_id <> 0"
+        metrics:
+          - metric_name: "sqlserver_blocking_sessions"
+            value_column: "blocking_sessions"
+            data_type: "gauge"
+      # - sql: |
+      #     SELECT 
+      #       wait_type, 
+      #       waiting_tasks_count,
+      #       wait_time_ms 
+      #     FROM sys.dm_os_wait_stats
+      #     WHERE wait_type IN ('LCK_M_X', 'CXPACKET', 'ASYNC_NETWORK_IO')
+      #   metrics:
+      #     - metric_name: "sqlserver_wait_time_ms"
+      #       value_column: "wait_time_ms"
+      #       data_type: "sum"
+      #       attributes:
+      #         wait_type: "wait_type"
+      #     - metric_name: "sqlserver_waiting_tasks"
+      #       value_column: "waiting_tasks_count"
+      #       data_type: "sum"
+      #       attributes:
+      #         wait_type: "wait_type"
+
+
+exporters:
+  otlp:
+    endpoint: "localhost:4317"  # invia metriche al collector sulla macchina host
+    tls:
+      insecure: true
+  azuremonitor:
+    connection_string: "InstrumentationKey=abcde123-abcde123-1111-aaaa-abcde123;IngestionEndpoint=https://endpoint.azure.com/;LiveEndpoint=https://endpoint.azure.com/;ApplicationId=abcde123-abcde123-1111-aaaa-abcde123"
+  debug:
+    verbosity: detailed
+processors:
+  attributes/add_custom_tags:
+    actions:
+      - key: environment
+        value: production
+        action: insert
+      - key: team
+        value: backend
+        action: upsert
+  resource/add_labels:
+    attributes:
+      - key: service.name
+        value: sqlstartexample2
+        action: upsert
+      - key: service.version
+        value: 2.0.1
+        action: insert
+  resource/pg:
+    attributes:
+      - key: service.name
+        value: sqlstartexamplepg
+        action: upsert
+      - key: service.version
+        value: 3.0.0
+        action: insert
+  batch: {}
+service:
+  pipelines:
+    metrics:
+      receivers: [sqlquery]
+      processors: [attributes/add_custom_tags, resource/add_labels, batch]
+      exporters: [azuremonitor,debug]

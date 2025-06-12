@@ -1,0 +1,391 @@
+receivers:
+  sqlquery:
+    driver: "sqlserver"
+    collection_interval: 60s
+    datasource: "sqlserver://sqlstart:StrongPwd@host.docker.internal:57174"
+    
+    queries:
+      # === 1. CONNECTION & SESSION METRICS ===
+      
+      # Connessioni attive totali
+      - sql: "SELECT COUNT(*) as active_connections FROM sys.dm_exec_connections"
+        metrics:
+          - metric_name: "sqlserver_active_connections_total"
+            value_column: "active_connections"
+            data_type: "gauge"
+            
+      # Sessioni per database
+      - sql: |
+          SELECT 
+            ISNULL(DB_NAME(database_id), 'system') as database_name,
+            COUNT(*) as sessions_count
+          FROM sys.dm_exec_sessions 
+          WHERE is_user_process = 1 
+          GROUP BY database_id
+        metrics:
+          - metric_name: "sqlserver_sessions_per_database"
+            value_column: "sessions_count"
+            data_type: "gauge"
+            
+      # Connessioni per applicazione
+      - sql: |
+          SELECT 
+            ISNULL(program_name, 'Unknown') as application_name,
+            COUNT(*) as connection_count
+          FROM sys.dm_exec_sessions 
+          WHERE is_user_process = 1 AND program_name IS NOT NULL
+          GROUP BY program_name
+        metrics:
+          - metric_name: "sqlserver_connections_per_application"
+            value_column: "connection_count"
+            data_type: "gauge"
+
+      # === 2. PERFORMANCE & QUERY METRICS ===
+      
+      # Query attive totali
+      - sql: |
+          SELECT 
+            COUNT(*) as active_queries,
+            AVG(CAST(total_elapsed_time AS FLOAT)) as avg_duration_ms,
+            AVG(CAST(cpu_time AS FLOAT)) as avg_cpu_ms
+          FROM sys.dm_exec_requests 
+          WHERE session_id > 50
+        metrics:
+          - metric_name: "sqlserver_active_queries_total"
+            value_column: "active_queries"
+            data_type: "gauge"
+          - metric_name: "sqlserver_avg_query_duration_ms"
+            value_column: "avg_duration_ms"
+            data_type: "gauge"
+          - metric_name: "sqlserver_avg_cpu_time_ms"
+            value_column: "avg_cpu_ms"
+            data_type: "gauge"
+            
+      # Buffer Cache Hit Ratio (CRITICO)
+      - sql: |
+          SELECT cntr_value as buffer_cache_hit_ratio
+          FROM sys.dm_os_performance_counters 
+          WHERE counter_name = 'Buffer cache hit ratio'
+          AND object_name LIKE '%Buffer Manager%'
+        metrics:
+          - metric_name: "sqlserver_buffer_cache_hit_ratio"
+            value_column: "buffer_cache_hit_ratio"
+            data_type: "gauge"
+
+      # === 3. BLOCKING & LOCKING METRICS ===
+      
+      # Sessioni bloccate totali
+      - sql: |
+          SELECT COUNT(*) as blocked_sessions
+          FROM sys.dm_exec_requests 
+          WHERE blocking_session_id <> 0
+        metrics:
+          - metric_name: "sqlserver_blocked_sessions_total"
+            value_column: "blocked_sessions"
+            data_type: "gauge"
+            
+      # Dettaglio sessioni bloccate per wait type
+      - sql: |
+          SELECT 
+            ISNULL(wait_type, 'Unknown') as wait_type,
+            COUNT(*) as blocked_count
+          FROM sys.dm_exec_requests 
+          WHERE blocking_session_id <> 0
+          GROUP BY wait_type
+        metrics:
+          - metric_name: "sqlserver_blocked_sessions_by_wait_type"
+            value_column: "blocked_count"
+            data_type: "gauge"
+            
+      # Deadlock e Lock Timeouts
+      - sql: |
+          SELECT 
+            SUM(CASE WHEN counter_name = 'Number of Deadlocks/sec' THEN cntr_value ELSE 0 END) as deadlocks_per_sec,
+            SUM(CASE WHEN counter_name = 'Lock Timeouts/sec' THEN cntr_value ELSE 0 END) as lock_timeouts_per_sec
+          FROM sys.dm_os_performance_counters 
+          WHERE counter_name IN ('Number of Deadlocks/sec', 'Lock Timeouts/sec')
+        metrics:
+          - metric_name: "sqlserver_deadlocks_per_sec"
+            value_column: "deadlocks_per_sec"
+            data_type: "gauge"
+          - metric_name: "sqlserver_lock_timeouts_per_sec"
+            value_column: "lock_timeouts_per_sec"
+            data_type: "gauge"
+
+      # === 4. I/O & STORAGE METRICS ===
+      
+      # I/O Reads per database
+      - sql: |
+          SELECT 
+            DB_NAME(database_id) as database_name,
+            SUM(num_of_reads) as total_reads,
+            SUM(io_stall_read_ms) as total_read_stall_ms,
+            CASE 
+              WHEN SUM(num_of_reads) > 0 THEN SUM(io_stall_read_ms) * 1.0 / SUM(num_of_reads)
+              ELSE 0 
+            END as avg_read_latency_ms
+          FROM sys.dm_io_virtual_file_stats(NULL, NULL)
+          WHERE database_id > 4
+          GROUP BY database_id
+        metrics:
+          - metric_name: "sqlserver_database_reads_total"
+            value_column: "total_reads"
+            data_type: "gauge"
+          - metric_name: "sqlserver_avg_read_latency_ms"
+            value_column: "avg_read_latency_ms"
+            data_type: "gauge"
+            
+      # I/O Writes per database
+      - sql: |
+          SELECT 
+            DB_NAME(database_id) as database_name,
+            SUM(num_of_writes) as total_writes,
+            SUM(io_stall_write_ms) as total_write_stall_ms,
+            CASE 
+              WHEN SUM(num_of_writes) > 0 THEN SUM(io_stall_write_ms) * 1.0 / SUM(num_of_writes)
+              ELSE 0 
+            END as avg_write_latency_ms
+          FROM sys.dm_io_virtual_file_stats(NULL, NULL)
+          WHERE database_id > 4
+          GROUP BY database_id
+        metrics:
+          - metric_name: "sqlserver_database_writes_total"
+            value_column: "total_writes"
+            data_type: "gauge"
+          - metric_name: "sqlserver_avg_write_latency_ms"
+            value_column: "avg_write_latency_ms"
+            data_type: "gauge"
+
+      # === 5. WAIT STATISTICS ===
+      
+      # Top 10 Wait Types
+      - sql: |
+          SELECT TOP 10
+            wait_type,
+            wait_time_ms,
+            waiting_tasks_count,
+            signal_wait_time_ms
+          FROM sys.dm_os_wait_stats 
+          WHERE wait_type NOT IN (
+            'CLR_SEMAPHORE', 'LAZYWRITER_SLEEP', 'RESOURCE_QUEUE', 
+            'SLEEP_TASK', 'SQLTRACE_INCREMENTAL_FLUSH_SLEEP',
+            'WAITFOR', 'BROKER_EVENTHANDLER', 'BROKER_RECEIVE_WAITFOR'
+          )
+          AND wait_time_ms > 100
+          ORDER BY wait_time_ms DESC
+        metrics:
+          - metric_name: "sqlserver_wait_time_ms"
+            value_column: "wait_time_ms"
+            data_type: "gauge"
+          - metric_name: "sqlserver_waiting_tasks_count"
+            value_column: "waiting_tasks_count"
+            data_type: "gauge"
+          - metric_name: "sqlserver_signal_wait_time_ms"
+            value_column: "signal_wait_time_ms"
+            data_type: "gauge"
+            
+      # Wait Categories Summary
+      - sql: |
+          SELECT 
+            CASE 
+              WHEN wait_type LIKE 'LCK_%' THEN 'Locking'
+              WHEN wait_type LIKE 'PAGEIO%' OR wait_type LIKE 'WRITELOG%' THEN 'IO'
+              WHEN wait_type LIKE 'NETWORK%' THEN 'Network'
+              WHEN wait_type IN ('CXPACKET', 'CXCONSUMER') THEN 'Parallelism'
+              WHEN wait_type LIKE 'PAGELATCH%' THEN 'Page_Latch'
+              ELSE 'Other'
+            END as wait_category,
+            SUM(wait_time_ms) as total_wait_time_ms,
+            SUM(waiting_tasks_count) as total_waiting_tasks
+          FROM sys.dm_os_wait_stats 
+          WHERE wait_type NOT IN (
+            'CLR_SEMAPHORE', 'LAZYWRITER_SLEEP', 'RESOURCE_QUEUE', 
+            'SLEEP_TASK', 'SQLTRACE_INCREMENTAL_FLUSH_SLEEP'
+          )
+          GROUP BY CASE 
+            WHEN wait_type LIKE 'LCK_%' THEN 'Locking'
+            WHEN wait_type LIKE 'PAGEIO%' OR wait_type LIKE 'WRITELOG%' THEN 'IO'
+            WHEN wait_type LIKE 'NETWORK%' THEN 'Network'
+            WHEN wait_type IN ('CXPACKET', 'CXCONSUMER') THEN 'Parallelism'
+            WHEN wait_type LIKE 'PAGELATCH%' THEN 'Page_Latch'
+            ELSE 'Other'
+          END
+        metrics:
+          - metric_name: "sqlserver_wait_category_time_ms"
+            value_column: "total_wait_time_ms"
+            data_type: "gauge"
+          - metric_name: "sqlserver_wait_category_tasks"
+            value_column: "total_waiting_tasks"
+            data_type: "gauge"
+
+      # === 6. MEMORY METRICS ===
+      
+      # Key Memory Counters
+      - sql: |
+          SELECT 
+            SUM(CASE WHEN counter_name = 'Buffer cache hit ratio' THEN cntr_value ELSE 0 END) as buffer_cache_hit_ratio,
+            SUM(CASE WHEN counter_name = 'Page life expectancy' THEN cntr_value ELSE 0 END) as page_life_expectancy,
+            SUM(CASE WHEN counter_name = 'Memory Grants Pending' THEN cntr_value ELSE 0 END) as memory_grants_pending
+          FROM sys.dm_os_performance_counters 
+          WHERE counter_name IN (
+            'Buffer cache hit ratio',
+            'Page life expectancy',
+            'Memory Grants Pending'
+          )
+        metrics:
+          - metric_name: "sqlserver_buffer_cache_hit_ratio_detailed"
+            value_column: "buffer_cache_hit_ratio"
+            data_type: "gauge"
+          - metric_name: "sqlserver_page_life_expectancy"
+            value_column: "page_life_expectancy"
+            data_type: "gauge"
+          - metric_name: "sqlserver_memory_grants_pending"
+            value_column: "memory_grants_pending"
+            data_type: "gauge"
+
+      # === 7. TRANSACTION METRICS ===
+      
+      # Transaction throughput
+      - sql: |
+          SELECT 
+            cntr_value as transactions_per_sec
+          FROM sys.dm_os_performance_counters 
+          WHERE counter_name = 'Transactions/sec' 
+          AND instance_name = '_Total'
+        metrics:
+          - metric_name: "sqlserver_transactions_per_sec"
+            value_column: "transactions_per_sec"
+            data_type: "gauge"
+            
+      # Log file usage per database
+      - sql: |
+          SELECT 
+            instance_name as database_name,
+            cntr_value as log_size_kb
+          FROM sys.dm_os_performance_counters 
+          WHERE counter_name = 'Log File(s) Size (KB)'
+          AND instance_name <> '_Total'
+        metrics:
+          - metric_name: "sqlserver_log_file_size_kb"
+            value_column: "log_size_kb"
+            data_type: "gauge"
+            
+      # Percent Log Used
+      - sql: |
+          SELECT 
+            instance_name as database_name,
+            cntr_value as percent_log_used
+          FROM sys.dm_os_performance_counters 
+          WHERE counter_name = 'Percent Log Used'
+          AND instance_name <> '_Total'
+        metrics:
+          - metric_name: "sqlserver_percent_log_used"
+            value_column: "percent_log_used"
+            data_type: "gauge"
+            
+      # Long Running Transactions
+      - sql: |
+          SELECT 
+            COUNT(*) as long_running_transactions,
+            AVG(DATEDIFF(second, transaction_begin_time, GETDATE())) as avg_duration_seconds
+          FROM sys.dm_tran_active_transactions t
+          INNER JOIN sys.dm_tran_session_transactions st ON t.transaction_id = st.transaction_id
+          WHERE DATEDIFF(second, transaction_begin_time, GETDATE()) > 30
+        metrics:
+          - metric_name: "sqlserver_long_running_transactions"
+            value_column: "long_running_transactions"
+            data_type: "gauge"
+          - metric_name: "sqlserver_avg_transaction_duration_seconds"
+            value_column: "avg_duration_seconds"
+            data_type: "gauge"
+
+# Processors per arricchire i dati con attributi
+processors:
+  # Resource processor
+  resource/baseresource:
+    attributes:
+      - key: service.name
+        value: "sqlserver-monitoring"
+        action: insert
+      - key: service.version
+        value: "1.0.0"
+        action: insert
+      - key: service.instance.id
+        value: "mssqlserver01"
+        action: insert
+      - key: deployment.environment
+        value: "development"
+        action: insert
+      - key: host.name
+        value: "sql-server-host"
+        action: insert
+      - key: db.system
+        value: "mssqlserver"
+        action: insert
+      - key: db.instance
+        value: "MSSQLSERVER01"
+        action: insert
+      - key: team
+        value: "data-platform"
+        action: insert
+        
+  # Attributes processor per aggiungere metadata base
+  attributes:
+    actions:
+      - key: collector.name
+        value: "otel-sql-collector"
+        action: insert
+      - key: monitoring.scope
+        value: "data-access-observability"
+        action: insert
+      - key: metric.source
+        value: "sqlserver"
+        action: insert
+        
+  # Transform processor per migliorare le metriche
+  transform:
+    metric_statements:
+      - context: metric
+        statements:
+          # Descrizioni
+          - set(description, "Total active connections to SQL Server") where name == "sqlserver_active_connections_total"
+          - set(description, "Active user sessions per database") where name == "sqlserver_sessions_per_database"
+          - set(description, "Blocked sessions indicating concurrency issues") where name == "sqlserver_blocked_sessions_total"
+          - set(description, "Buffer cache hit ratio - critical performance indicator") where name == "sqlserver_buffer_cache_hit_ratio"
+          - set(description, "Average I/O read latency per database") where name == "sqlserver_avg_read_latency_ms"
+          - set(description, "Average I/O write latency per database") where name == "sqlserver_avg_write_latency_ms"
+          - set(description, "SQL Server wait time by wait type") where name == "sqlserver_wait_time_ms"
+          - set(description, "Long running transactions that may cause blocking") where name == "sqlserver_long_running_transactions"
+          
+          # Unità di misura
+          - set(unit, "ms") where name == "sqlserver_avg_query_duration_ms"
+          - set(unit, "ms") where name == "sqlserver_avg_cpu_time_ms"
+          - set(unit, "ms") where name == "sqlserver_avg_read_latency_ms"
+          - set(unit, "ms") where name == "sqlserver_avg_write_latency_ms"
+          - set(unit, "ms") where name == "sqlserver_wait_time_ms"
+          - set(unit, "ms") where name == "sqlserver_signal_wait_time_ms"
+          - set(unit, "%") where name == "sqlserver_buffer_cache_hit_ratio"
+          - set(unit, "%") where name == "sqlserver_percent_log_used"
+          - set(unit, "s") where name == "sqlserver_avg_transaction_duration_seconds"
+          - set(unit, "s") where name == "sqlserver_page_life_expectancy"
+          - set(unit, "KB") where name == "sqlserver_log_file_size_kb"
+          - set(unit, "1") where name == "sqlserver_active_connections_total"
+          - set(unit, "1") where name == "sqlserver_blocked_sessions_total"
+
+exporters:
+  otlp:
+    endpoint: "host.docker.internal:4317"
+    tls:
+      insecure: true
+  # Debug exporter per vedere i dati in output
+  debug:
+    verbosity: detailed
+    sampling_initial: 2
+    sampling_thereafter: 500
+
+service:
+  pipelines:
+    metrics:
+      receivers: [sqlquery]
+      processors: [resource/baseresource, attributes, transform]
+      exporters: [otlp, debug]

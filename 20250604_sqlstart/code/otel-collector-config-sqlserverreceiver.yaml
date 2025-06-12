@@ -1,0 +1,43 @@
+receivers:
+  sqlserver:
+    collection_interval: 15s
+    username: sqlstart
+    password: StrongPwd
+    server: host.docker.internal
+    port: 57174
+    resource_attributes:
+      sqlserver.computer.name:
+        enabled: true
+      sqlserver.instance.name:
+        enabled: true
+exporters:
+  otlp:
+    endpoint: "host.docker.internal:4317"  # invia metriche al collector sulla macchina host
+    tls:
+      insecure: true
+  debug:
+    verbosity: detailed
+processors:
+  attributes/add_custom_tags:
+    actions:
+      - key: environment
+        value: production
+        action: insert
+  resource/sql:
+    attributes:
+      - key: service.name
+        value: sqlstart2025_sqlserverreceiver
+        action: upsert
+      - key: service.version
+        value: 1.0.0
+        action: insert
+      - key: sqlserver.instance.name
+        value: MSSQLSERVER01
+        action: upsert
+  batch: {}
+service:
+  pipelines:
+    metrics:
+      receivers: [sqlserver]
+      processors: [attributes/add_custom_tags, resource/sql, batch]
+      exporters: [otlp,debug]
