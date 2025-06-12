@@ -13,7 +13,7 @@ public class MenuController(ILogger<MenuController> logger, IHttpClientFactory h
    public async Task<IActionResult> GetMenu()
    {
       ApplicationDiagnostics.PiadinaConsumed.Add(Random.Shared.Next(1, 10));
-      string city = "Roma";
+      string city = "Ancona";
       logger.LogInformation($"Saluti non strutturati da {city}");
       logger.LogInformation("Saluti da {City}",city);
       return await GetMenuSteyByStepAsync(httpClientFactory);

@@ -10,7 +10,6 @@ using System.Reflection;
 using KitchenApp.Utilities;
 using OpenTelemetry.Exporter;
 using OpenTelemetry.Metrics;
-using Azure.Monitor.OpenTelemetry.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,24 +33,21 @@ builder.Services.AddOpenTelemetry()
       .ConfigureResource(resource => resource.AddService(serviceName: "KitchenApp", serviceVersion: Assembly.GetCallingAssembly().GetName().Version?.ToString()))
       .WithTracing(tracing => tracing
          .AddAspNetCoreInstrumentation()
+         .AddHttpClientInstrumentation()
          .AddSource(ApplicationDiagnostics.DataAccessSourceName)
-         .AddSqlClientInstrumentation(options =>
+
+         .AddEntityFrameworkCoreInstrumentation(opt =>
          {
-            options.SetDbStatementForText = true;
-            options.RecordException = true;
-            options.EnableConnectionLevelAttributes = true;
+            opt.SetDbStatementForText = true;
+            opt.SetDbStatementForText = true;
+            opt.EnrichWithIDbCommand = (activity, command) =>
+            {
+               activity.SetParentId(activity.ParentId);
+            };
 
          })
          .AddConsoleExporter()
-         .AddOtlpExporter().AddOtlpExporter((otlpOptions =>
-         {
-            otlpOptions.Endpoint = new Uri("http://localhost:5080/api/default/v1/traces");
-            otlpOptions.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.HttpProtobuf;
-
-            // Autenticazione Basic per OpenObserve
-            otlpOptions.Headers = "Authorization=Basic " +
-                Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes("admin@example.com:Complexpass#123"));
-         }))
+         .AddOtlpExporter()
 
          )
       .WithMetrics(metrics => metrics
@@ -77,9 +73,18 @@ builder.Services.AddOpenTelemetry()
 //           {
 //              options.SetDbStatementForText = true;
 //              options.RecordException = true;
-//              options.EnableConnectionLevelAttributes = true;
 
 //           })
+//         .AddEntityFrameworkCoreInstrumentation(opt =>
+//         {
+//            opt.SetDbStatementForText = true;
+//            opt.SetDbStatementForText = true;
+//            opt.EnrichWithIDbCommand = (activity, command) =>
+//            {
+//               activity.SetParentId(activity.ParentId);
+//            };
+
+//         })
 #endregion
 #region EXTRA - OTELTraces with filter
 //builder.Services.AddOpenTelemetry().ConfigureResource(resource => resource
@@ -115,9 +120,6 @@ builder.Services.AddOpenTelemetry()
 //         );
 #endregion
 
-
-
-
 #region OTELTracesWithCustomSpan
 
 //         .AddSource(ApplicationDiagnostics.DataAccessSourceName)
@@ -152,6 +154,16 @@ builder.Services.AddOpenTelemetry()
 //   cf.Endpoint = new Uri("http://localhost:5341/ingest/otlp/v1/traces");
 //   cf.Protocol = OtlpExportProtocol.HttpProtobuf;
 //})
+//.AddOtlpExporter((otlpOptions =>
+// {
+//    otlpOptions.Endpoint = new Uri("http://localhost:5080/api/default/v1/traces");
+//    otlpOptions.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.HttpProtobuf;
+
+//    // Autenticazione Basic per OpenObserve
+//    otlpOptions.Headers = "Authorization=Basic " +
+//        Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes("admin@example.com:Complexpass#123"));
+// }))
+
 #endregion
 
 #region OTELLogging
@@ -162,23 +174,29 @@ builder.Logging.AddOpenTelemetry(otel =>
    otel.IncludeScopes = true;
    otel.IncludeFormattedMessage = true;
    otel.AddConsoleExporter();
-   otel.AddOtlpExporter((otlpOptions =>
-             {
-                otlpOptions.Endpoint = new Uri("http://localhost:5080/api/default/v1/logs");
-                otlpOptions.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.HttpProtobuf;
 
-                // Autenticazione Basic per OpenObserve
-                otlpOptions.Headers = "Authorization=Basic " +
-                    Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes("admin@example.com:Complexpass#123"));
-             }));
    otel.AddOtlpExporter();
 }
 );
 #endregion
-builder.Services.AddOpenTelemetry()
-    .UseAzureMonitor(options => {
-       options.ConnectionString = "InstrumentationKey=aff1323d-bfd7-4613-bf4a-255dc81e5b14;IngestionEndpoint=https://westeurope-5.in.applicationinsights.azure.com/;LiveEndpoint=https://westeurope.livediagnostics.monitor.azure.com/;ApplicationId=6e4d20e3-a984-42b4-a735-be00dc856b34";
-    });
+
+#region customLogging
+//otel.AddOtlpExporter((otlpOptions =>
+//{
+//   otlpOptions.Endpoint = new Uri("http://localhost:5080/api/default/v1/logs");
+//   otlpOptions.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.HttpProtobuf;
+
+//   // Autenticazione Basic per OpenObserve
+//   otlpOptions.Headers = "Authorization=Basic " +
+//       Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes("admin@example.com:Complexpass#123"));
+//}));
+#endregion
+#region azuremonitor
+//builder.Services.AddOpenTelemetry()
+//    .UseAzureMonitor(options => {
+//       options.ConnectionString = "my-connection-string";
+//    });
+#endregion
 
 builder.Services.AddScoped<IDishService, DishService>();
 builder.Services.AddScoped<IDishRepository, DishRepository>();
