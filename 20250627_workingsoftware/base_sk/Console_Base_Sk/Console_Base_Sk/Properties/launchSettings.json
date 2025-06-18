@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Console_Base_Sk": {
+      "commandName": "Project"
+    },
+    "Container (Dockerfile)": {
+      "commandName": "Docker"
+    }
+  }
+}
