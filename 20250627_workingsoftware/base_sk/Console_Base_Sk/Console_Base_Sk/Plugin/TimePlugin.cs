@@ -20,6 +20,16 @@ public class TimePlugin
       Console.WriteLine($"Ora attuale: {result.ToString()}");
       return result;
    }
+   [KernelFunction]
+   [Description("Ottiene il fuso orario locale")]
+   public async Task<string> GetCurrentTimezone(Kernel kernel)
+   {
+
+      await Task.Delay(500);
+      TimeZoneInfo result = TimeZoneInfo.Local;
+
+      return result.ToSerializedString();
+   }
 
    [KernelFunction]
    [Description("Analizza il sentimento del testo e restituisce un punteggio da -1 (molto negativo) a 1 (molto positivo)")]

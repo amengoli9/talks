@@ -1,24 +1,29 @@
 ﻿using Console_Base_Sk.Plugin;
+using Menu.Utilities;
 using Microsoft.Extensions.AI;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
+using Microsoft.SemanticKernel.Connectors.Ollama;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
+using OpenAI.Chat;
 
 namespace Console_Base_Sk;
 
-class BaseAIService(Kernel kernel, IChatCompletionService chatService) : IAIService
+class BaseAIService(Kernel kernel) : IAIService
 {
 
    public async Task<string> GetResponseAsync(string prompt, ChatHistory history)
    {
-         OpenAIPromptExecutionSettings openAIPromptExecutionSettings = new()
+
+      using var activity = ApplicationDiagnostics.ActivitySource.StartActivity("GetResponse");
+      OpenAIPromptExecutionSettings openAIPromptExecutionSettings = new()
          {
             FunctionChoiceBehavior = FunctionChoiceBehavior.None()
          };
 
-         history.AddUserMessage(prompt);
+         
          ChatOptions options = new ChatOptions();
-
+         IChatCompletionService chatService = kernel.GetRequiredService<IChatCompletionService>("azure");
          bool roleWritten = false;
          string fullMessage = string.Empty;
          List<StreamingChatMessageContent> chatUpdates = [];
@@ -38,25 +43,28 @@ class BaseAIService(Kernel kernel, IChatCompletionService chatService) : IAIServ
 
 }
 
-class PluginAIService(Kernel kernel, IChatCompletionService chatService) : IAIService
+class PluginAIService(Kernel kernel) : IAIService
 {
 
-   public async Task<string> GetResponseAsync(string prompt, ChatHistory history)
+   public async Task<string> GetResponseAsyncNo(string prompt, ChatHistory history)
    {
-      OpenAIPromptExecutionSettings openAIPromptExecutionSettings = new()
-      {
-         FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
-      };
+      var settings = new OllamaPromptExecutionSettings { FunctionChoiceBehavior = FunctionChoiceBehavior.Auto() };
 
-      kernel.Plugins.AddFromType<TimePlugin>("Text");
+      var chatService = kernel.GetRequiredService<IChatCompletionService>();
+      //kernel.Plugins.AddFromType<TimePlugin>("Text");
+      kernel.Plugins
+    .AddFromObject(new TimePlugin());
       history.AddUserMessage(prompt);
       ChatOptions options = new ChatOptions();
 
       bool roleWritten = false;
       string fullMessage = string.Empty;
       List<StreamingChatMessageContent> chatUpdates = [];
+
+      Microsoft.SemanticKernel.ChatMessageContent chatResult = await chatService.GetChatMessageContentAsync(prompt, settings, kernel);
+
       await foreach (var chatUpdate in chatService.GetStreamingChatMessageContentsAsync(history,
-         executionSettings: openAIPromptExecutionSettings,
+         executionSettings: settings,
    kernel: kernel))
       {
          chatUpdates.Add(chatUpdate);
@@ -68,7 +76,39 @@ class PluginAIService(Kernel kernel, IChatCompletionService chatService) : IAISe
 
       return chatUpdates.ToString();
    }
+   public async Task<string> GetResponseAsync(string prompt, ChatHistory history)
+   {
+      using var activity = ApplicationDiagnostics.ActivitySource.StartActivity("GetResponse");
+      OpenAIPromptExecutionSettings openAIPromptExecutionSettings = new()
+      {
+         FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
+      };
 
+      var settings = new OllamaPromptExecutionSettings { FunctionChoiceBehavior = FunctionChoiceBehavior.Auto() };
+
+      IChatCompletionService chatService = kernel.GetRequiredService<IChatCompletionService>("azure");
+      //kernel.Plugins.AddFromType<TimePlugin>("Text");
+      kernel.Plugins
+    .AddFromObject(new TimePlugin());
+      history.AddUserMessage(prompt);
+      ChatOptions options = new ChatOptions();
+
+      bool roleWritten = false;
+      string fullMessage = string.Empty;
+      List<StreamingChatMessageContent> chatUpdates = [];
+      await foreach (var chatUpdate in chatService.GetStreamingChatMessageContentsAsync(history,
+         executionSettings: settings,
+   kernel: kernel))
+      {
+         chatUpdates.Add(chatUpdate);
+
+         Console.Write(chatUpdate);
+      }
+
+      Console.WriteLine("\n------------------------");
+
+      return chatUpdates.ToString();
+   }
 }
 
 
