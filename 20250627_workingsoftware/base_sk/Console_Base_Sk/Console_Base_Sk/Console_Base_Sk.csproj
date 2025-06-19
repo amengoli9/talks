@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+     <NoWarn>$(NoWarn);CA2007,CA2208,CS1591,CA1024,IDE0009,IDE0055,IDE0073,IDE0211,VSTHRD111,SKEXP0001,SKEXP0070</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
