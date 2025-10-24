@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "SK_complete": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "aifoundry"
+      }
+    }
+  }
+}
