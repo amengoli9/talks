@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Agents;
 using Microsoft.SemanticKernel.ChatCompletion;
+using Microsoft.SemanticKernel.Connectors.AzureOpenAI;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using OpenTelemetry;
 using OpenTelemetry.Logs;
@@ -95,30 +96,77 @@ if (string.IsNullOrWhiteSpace(aoai.DeploymentName) ||
 
 
 #region chat
-using (var activity = activitySource.StartActivity("INIT_CHAT"))
+//using (var activity = activitySource.StartActivity("INIT_CHAT"))
+//{
+
+//   IKernelBuilder builder = Kernel.CreateBuilder();
+//   builder.AddAzureOpenAIChatCompletion(aoai.DeploymentName!, aoai.Endpoint!, aoai.ApiKey!,httpClient: client );
+
+//   Kernel kernel = builder.Build();
+
+   
+//   ChatCompletionAgent chatCompletionAgent = new()
+//   {
+//      Name = "chat-agent",
+//      Description = "An agent that can chat with the user.",
+//      Kernel = kernel
+//   };
+//   string? userInput;
+//   AgentThread thread = new ChatHistoryAgentThread();
+//   do
+//   {
+//      Console.Write("User > ");
+//      userInput = Console.ReadLine(); 
+//      if (userInput is null)
+//         break;
+//      using var userMessageActivity = activitySource.StartActivity("UserMessage", ActivityKind.Internal);
+//      userMessageActivity?.SetTag("message.length", userInput.Length);
+//      var res =  chatCompletionAgent.InvokeAsync(userInput, thread);
+//      StringBuilder sb = new StringBuilder();
+//      await foreach (var message in res)
+//      {
+//         sb.Append(message.Message);
+//      }
+//      Console.WriteLine($"AI > {sb.ToString()}");
+
+
+//   } while (userInput is not null && userInput.Trim() != "addio");
+
+//}
+#endregion
+
+
+
+#region chat plugin
+using (var activity = activitySource.StartActivity("INIT_CHAT_PLUGIN"))
 {
 
    IKernelBuilder builder = Kernel.CreateBuilder();
-   builder.AddAzureOpenAIChatCompletion(aoai.DeploymentName!, aoai.Endpoint!, aoai.ApiKey!,httpClient: client );
+   builder.AddAzureOpenAIChatCompletion(aoai.DeploymentName!, aoai.Endpoint!, aoai.ApiKey!, httpClient: client);
 
    Kernel kernel = builder.Build();
+
+   kernel.Plugins.AddFromType<TimeInformation>();
+
    ChatCompletionAgent chatCompletionAgent = new()
    {
       Name = "chat-agent",
       Description = "An agent that can chat with the user.",
-      Kernel = kernel
+      Kernel = kernel,
+      Arguments =  new KernelArguments(new AzureOpenAIPromptExecutionSettings() { FunctionChoiceBehavior = FunctionChoiceBehavior.Auto() })
+
    };
    string? userInput;
    AgentThread thread = new ChatHistoryAgentThread();
    do
    {
       Console.Write("User > ");
-      userInput = Console.ReadLine(); 
+      userInput = Console.ReadLine();
       if (userInput is null)
          break;
       using var userMessageActivity = activitySource.StartActivity("UserMessage", ActivityKind.Internal);
       userMessageActivity?.SetTag("message.length", userInput.Length);
-      var res =  chatCompletionAgent.InvokeAsync(userInput, thread);
+      var res = chatCompletionAgent.InvokeAsync(userInput, thread);
       StringBuilder sb = new StringBuilder();
       await foreach (var message in res)
       {
@@ -127,12 +175,10 @@ using (var activity = activitySource.StartActivity("INIT_CHAT"))
       Console.WriteLine($"AI > {sb.ToString()}");
 
 
-   } while (userInput is not null || userInput.Trim() != "addio");
+   } while (userInput is not null && userInput.Trim() != "addio");
 
 }
 #endregion
-
-
 
 
 
