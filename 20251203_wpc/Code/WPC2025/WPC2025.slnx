@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="KitchenApp/KitchenApp.csproj" />
+  <Project Path="MenuApp/MenuApp.csproj" Id="8616ee7d-7cbd-4ca6-a2b2-3d6a1f8633c4" />
+</Solution>
