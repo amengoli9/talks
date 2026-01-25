@@ -1,0 +1,38 @@
+BenchmarkDotNet v0.15.2, Windows 11 (10.0.26200.7462)
+12th Gen Intel Core i7-12800H 2.40GHz, 1 CPU, 20 logical and 14 physical cores
+.NET SDK 10.0.100
+  [Host]     : .NET 10.0.0 (10.0.25.52411), X64 RyuJIT AVX2
+  DefaultJob : .NET 10.0.0 (10.0.25.52411), X64 RyuJIT AVX2
+
+
+| Method                          | Mean       | Error     | StdDev    | Ratio | RatioSD | Rank | Gen0   | Allocated | Alloc Ratio |
+|-------------------------------- |-----------:|----------:|----------:|------:|--------:|-----:|-------:|----------:|------------:|
+| StandardLogging                 | 167.283 ns | 3.2747 ns | 2.9029 ns | 1.000 |    0.02 |    5 | 0.0165 |     208 B |        1.00 |
+| SourceGeneratedLogging          | 148.157 ns | 2.9752 ns | 3.8687 ns | 0.886 |    0.03 |    4 | 0.0126 |     160 B |        0.77 |
+| HighPerformanceLogging          | 146.104 ns | 2.5390 ns | 4.1717 ns | 0.874 |    0.03 |    4 | 0.0126 |     160 B |        0.77 |
+| StandardLogging_Disabled        |  29.045 ns | 0.5837 ns | 1.1657 ns | 0.174 |    0.01 |    3 | 0.0076 |      96 B |        0.46 |
+| SourceGeneratedLogging_Disabled |   1.175 ns | 0.0506 ns | 0.0449 ns | 0.007 |    0.00 |    1 |      - |         - |        0.00 |
+| HighPerformanceLogging_Disabled |   2.509 ns | 0.0804 ns | 0.1228 ns | 0.015 |    0.00 |    2 |      - |         - |        0.00 |
+
+// * Hints *
+Outliers
+  LoggingBenchmarks.StandardLogging: Default                 -> 1 outlier  was  removed (203.15 ns)
+  LoggingBenchmarks.SourceGeneratedLogging: Default          -> 3 outliers were removed (166.10 ns..182.93 ns)
+  LoggingBenchmarks.HighPerformanceLogging: Default          -> 3 outliers were removed (164.05 ns..184.25 ns)
+  LoggingBenchmarks.StandardLogging_Disabled: Default        -> 4 outliers were removed (34.60 ns..41.10 ns)
+  LoggingBenchmarks.SourceGeneratedLogging_Disabled: Default -> 1 outlier  was  removed (3.29 ns)
+  LoggingBenchmarks.HighPerformanceLogging_Disabled: Default -> 4 outliers were removed (4.51 ns..4.97 ns)
+
+// * Legends *
+  Mean        : Arithmetic mean of all measurements
+  Error       : Half of 99.9% confidence interval
+  StdDev      : Standard deviation of all measurements
+  Ratio       : Mean of the ratio distribution ([Current]/[Baseline])
+  RatioSD     : Standard deviation of the ratio distribution ([Current]/[Baseline])
+  Rank        : Relative position of current benchmark mean among all benchmarks (Arabic style)
+  Gen0        : GC Generation 0 collects per 1000 operations
+  Allocated   : Allocated memory per single operation (managed only, inclusive, 1KB = 1024B)
+  Alloc Ratio : Allocated memory ratio distribution ([Current]/[Baseline])
+  1 ns        : 1 Nanosecond (0.000000001 sec)
+
+// * Diagnostic Output - MemoryDiagnoser *
