@@ -73,7 +73,7 @@ Console.ResetColor();
 var services4 = new ServiceCollection();
 services4.TryAddEnumerable(ServiceDescriptor.Singleton<IMessageWriter, ConsoleMessageWriter>());
 services4.TryAddEnumerable(ServiceDescriptor.Singleton<IMessageWriter, LoggingMessageWriter>());
-services4.TryAddEnumerable(ServiceDescriptor.Singleton<IMessageWriter, ConsoleMessageWriter>()); // Dup!
+services4.TryAddEnumerable(ServiceDescriptor.Singleton<IMessageWriter, ConsoleMessageWriter>()); 
 
 var provider4 = services4.BuildServiceProvider();
 var all4 = provider4.GetRequiredService<IEnumerable<IMessageWriter>>();

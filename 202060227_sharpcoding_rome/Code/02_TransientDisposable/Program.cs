@@ -2,9 +2,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 Console.WriteLine("=== 2. TRANSIENT DISPOSABLE CATTURATI DAL CONTAINER ===\n");
 
-// ========================
-// ❌ ANTI-PATTERN: Transient IDisposable dal root provider
-// ========================
+#region anti-pattern Transient IDisposable dal root provider
+
 Console.ForegroundColor = ConsoleColor.Red;
 Console.WriteLine("--- ANTI-PATTERN: Transient Disposable senza scope ---");
 Console.ResetColor();
@@ -12,11 +11,11 @@ Console.ResetColor();
 ExpensiveResource.ResetCounter();
 var badServices = new ServiceCollection();
 badServices.AddTransient<ExpensiveResource>();
-var badProvider = badServices.BuildServiceProvider();
-
+var badProvider = badServices.BuildServiceProvider(); 
 Console.WriteLine("  Creo 5 istanze dal root provider...");
 for (int i = 0; i < 5; i++)
 {
+    // ERRORE QUI! Il provider tiene traccia di tutte le istanze transient che crea, ma non fa dispose finché il provider stesso non viene disposto.
     var resource = badProvider.GetRequiredService<ExpensiveResource>();
     resource.DoWork();
 }
@@ -28,10 +27,10 @@ Console.ResetColor();
 
 ((IDisposable)badProvider).Dispose();
 Console.WriteLine();
+#endregion
 
-// ========================
-// ✅ SOLUZIONE: Usare scope per ogni unita di lavoro
-// ========================
+#region solution1: Usare scope per ogni unita di lavoro
+
 Console.ForegroundColor = ConsoleColor.Green;
 Console.WriteLine("--- SOLUZIONE: Scope per ogni unita di lavoro ---");
 Console.ResetColor();
@@ -53,11 +52,11 @@ Console.ForegroundColor = ConsoleColor.Yellow;
 Console.WriteLine("  ^ Ogni risorsa viene disposta subito alla fine dello scope!\n");
 Console.ResetColor();
 
-// ========================
-// ✅ SOLUZIONE: Factory pattern
-// ========================
+#endregion
+
+#region solution2: Factory pattern
 Console.ForegroundColor = ConsoleColor.Green;
-Console.WriteLine("--- SOLUZIONE: Factory pattern (gestione manuale) ---");
+Console.WriteLine("--- SOLUZIONE: Factory pattern ---");
 Console.ResetColor();
 
 ExpensiveResource.ResetCounter();
@@ -76,8 +75,9 @@ for (int i = 0; i < 3; i++)
 Console.ForegroundColor = ConsoleColor.Yellow;
 Console.WriteLine("  ^ Il container non trattiene nulla — gestisci tu il ciclo di vita!");
 Console.ResetColor();
+#endregion
 
-// === Tipi ===
+#region interfaces and implementation
 
 class ExpensiveResource : IDisposable
 {
@@ -88,3 +88,4 @@ class ExpensiveResource : IDisposable
     public void Dispose() => Console.WriteLine($"  [Resource #{Id}] Disposed!");
     public static void ResetCounter() => _instanceCount = 0;
 }
+#endregion 

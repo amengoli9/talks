@@ -2,9 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 Console.WriteLine("=== 1. CAPTIVE DEPENDENCY ===\n");
 
-// ========================
-// ❌ ANTI-PATTERN DEMO
-// ========================
+#region anti-pattern
 Console.ForegroundColor = ConsoleColor.Red;
 Console.WriteLine("--- ANTI-PATTERN: Singleton cattura Scoped ---");
 Console.ResetColor();
@@ -26,10 +24,9 @@ for (int i = 1; i <= 3; i++)
 Console.ForegroundColor = ConsoleColor.Yellow;
 Console.WriteLine("  ^ PROBLEMA: Stesso DbContext per tutte le request!\n");
 Console.ResetColor();
+#endregion
 
-// ========================
-// ✅ SOLUZIONE DEMO
-// ========================
+#region solution 1
 Console.ForegroundColor = ConsoleColor.Green;
 Console.WriteLine("--- SOLUZIONE: IServiceScopeFactory ---");
 Console.ResetColor();
@@ -49,10 +46,10 @@ for (int i = 1; i <= 3; i++)
 Console.ForegroundColor = ConsoleColor.Yellow;
 Console.WriteLine("  ^ CORRETTO: Nuovo DbContext per ogni operazione!\n");
 Console.ResetColor();
+#endregion
 
-// ========================
-// ✅ SOLUZIONE: ValidateScopes
-// ========================
+#region solution 2 - ValidateScopes
+
 Console.ForegroundColor = ConsoleColor.Green;
 Console.WriteLine("--- SOLUZIONE: ValidateScopes rileva il problema ---");
 Console.ResetColor();
@@ -61,14 +58,20 @@ var validateServices = new ServiceCollection();
 validateServices.AddSingleton<BadOrderService>();
 validateServices.AddScoped<FakeDbContext>();
 
-var validateProvider = validateServices.BuildServiceProvider(validateScopes: true);
+var options = new ServiceProviderOptions
+{
+    ValidateScopes = true,
+    ValidateOnBuild = true
+};
+// se ValidateOnBuild è true, l'eccezione viene sollevata subito alla BuildServiceProvide altrimenti quando prova a risolvere BadOrderService
 
 try
 {
+    var validateProvider = validateServices.BuildServiceProvider(options);
     using var scope = validateProvider.CreateScope();
     var orderService = scope.ServiceProvider.GetRequiredService<BadOrderService>();
 }
-catch (InvalidOperationException ex)
+catch (Exception ex)
 {
     Console.ForegroundColor = ConsoleColor.Cyan;
     Console.WriteLine($"  Eccezione catturata: {ex.Message}");
@@ -81,8 +84,10 @@ Console.WriteLine("  Singleton -> dipende solo da -> Singleton");
 Console.WriteLine("  Scoped    -> dipende da      -> Scoped, Singleton");
 Console.WriteLine("  Transient -> dipende da      -> Transient, Scoped, Singleton");
 
-// === Tipi ===
+#endregion
 
+
+#region interfaces and implementations
 class FakeDbContext
 {
     public Guid InstanceId { get; } = Guid.NewGuid();
@@ -110,3 +115,4 @@ class GoodOrderService(IServiceScopeFactory scopeFactory)
         db.SaveOrder(item);
     }
 }
+#endregion

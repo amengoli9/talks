@@ -2,9 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 Console.WriteLine("=== 3. SERVICE LOCATOR PATTERN ===\n");
 
-// ========================
-// ❌ ANTI-PATTERN DEMO
-// ========================
+#region anti-pattern
 Console.ForegroundColor = ConsoleColor.Red;
 Console.WriteLine("--- ANTI-PATTERN: Service Locator ---");
 Console.ResetColor();
@@ -24,9 +22,9 @@ Console.WriteLine("  -> Per il test devi mockare l'intero IServiceProvider\n");
 var bad = provider.GetRequiredService<BadNotificationService>();
 bad.SendNotification("mario", "Ciao!");
 
-// ========================
-// ✅ SOLUZIONE DEMO
-// ========================
+#endregion
+
+#region solution
 Console.ForegroundColor = ConsoleColor.Green;
 Console.WriteLine("\n--- SOLUZIONE: Constructor Injection ---");
 Console.ResetColor();
@@ -38,12 +36,14 @@ Console.WriteLine("  -> Il test e' semplice: passa i mock direttamente\n");
 var good = provider.GetRequiredService<GoodNotificationService>();
 good.SendNotification("luigi", "Ciao!");
 
-Console.ForegroundColor = ConsoleColor.Yellow;
-Console.WriteLine("\n  Ricorda: la DI e' un'ALTERNATIVA ai pattern di accesso statico/globale.");
-Console.WriteLine("  Se inietti IServiceProvider ovunque, vanifichi i benefici della DI!");
-Console.ResetColor();
+//Console.ForegroundColor = ConsoleColor.Yellow;
+//Console.WriteLine("\n  Ricorda: la DI e' un'ALTERNATIVA ai pattern di accesso statico/globale.");
+//Console.WriteLine("  Se inietti IServiceProvider ovunque, vanifichi i benefici della DI!");
+//Console.ResetColor();
+#endregion
 
-// === Tipi ===
+
+#region interfaces and implementations
 
 interface IEmailSender
 {
@@ -89,3 +89,5 @@ class GoodNotificationService(IEmailSender emailSender, IUserRepository userRepo
         Console.WriteLine($"  [GoodService] Notifica inviata a {userId}");
     }
 }
+
+#endregion
