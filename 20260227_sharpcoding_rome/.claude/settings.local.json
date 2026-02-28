@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd:*)",
+      "Bash(tail:*)",
+      "Bash(cd \"C:/progetti/privale/talks/202060227_sharpcoding_rome/Code\" && dotnet build DI_AntiPatterns.slnx 2>&1)",
+      "Bash(cd \"C:/progetti/privale/talks/202060227_sharpcoding_rome/Code\" && dotnet run --project 01_CaptiveDependency 2>&1)",
+      "Bash(cd \"C:/progetti/privale/talks/202060227_sharpcoding_rome/Code\" && dotnet run --project 08_KeyedServicesBreakingChange 2>&1)"
+    ]
+  }
+}
