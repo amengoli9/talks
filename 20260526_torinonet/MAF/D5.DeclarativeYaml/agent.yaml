@@ -1,0 +1,26 @@
+# Declarative agent definition (kind: Prompt).
+# The chat client is supplied in code (ChatClientPromptAgentFactory); the YAML
+# describes name, instructions and tools. The function 'get_weather' is bound to
+# a real C# method provided to the factory.
+kind: Prompt
+name: Concierge
+description: Assistente concierge che risponde usando gli strumenti disponibili.
+instructions: |-
+  Sei un assistente concierge conciso. Rispondi in italiano.
+  Quando ti chiedono il meteo di una citta', usa lo strumento a disposizione.
+model:
+  options:
+    temperature: 0.7
+    chatToolMode: auto
+tools:
+  - kind: function
+    name: GetWeather
+    description: Restituisce il meteo per una citta'.
+    bindings:
+      get_weather: get_weather
+    parameters:
+      properties:
+        location:
+          kind: string
+          description: La citta' di cui vuoi il meteo.
+          required: true

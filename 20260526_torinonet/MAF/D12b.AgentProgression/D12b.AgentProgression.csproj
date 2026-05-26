@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>D12b.AgentProgression</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Maf.Demo.Shared\Maf.Demo.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Agents.AI" />
+    <PackageReference Include="OllamaSharp" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\appsettings.json" Link="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Optional: drop a real map.png in Assets/ and it gets picked up automatically. -->
+    <None Include="Assets\map.png" CopyToOutputDirectory="PreserveNewest" Condition="Exists('Assets\map.png')" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,26 @@
+# Declarative workflow definition (kind: Workflow).
+# A simple two-step orchestration: a planner agent breaks the request down,
+# then a writer agent produces the answer. Both agents are referenced by name
+# and must exist in the Azure AI Foundry project (the program creates them at
+# startup). Executed with DeclarativeWorkflowBuilder + AzureAgentProvider.
+kind: Workflow
+trigger:
+  kind: OnConversationStart
+  id: workflow_start
+  actions:
+
+    - kind: InvokeAzureAgent
+      id: invoke_planner
+      conversationId: =System.ConversationId
+      agent:
+        name: PlannerAgent
+
+    - kind: InvokeAzureAgent
+      id: invoke_writer
+      conversationId: =System.ConversationId
+      agent:
+        name: WriterAgent
+
+    - kind: SendActivity
+      id: send_done
+      activity: "--- workflow dichiarativo completato ---"

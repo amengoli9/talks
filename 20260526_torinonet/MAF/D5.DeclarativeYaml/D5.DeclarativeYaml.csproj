@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>D5.DeclarativeYaml</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Maf.Demo.Shared\Maf.Demo.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Part A: declarative agent from YAML -->
+    <PackageReference Include="Microsoft.Agents.AI" />
+    <PackageReference Include="Microsoft.Agents.AI.Declarative" />
+    <PackageReference Include="Microsoft.Agents.ObjectModel" />
+    <PackageReference Include="Microsoft.Agents.ObjectModel.Json" />
+    <PackageReference Include="Microsoft.Agents.ObjectModel.PowerFx" />
+    <!-- Part B: declarative workflow from YAML (Foundry) -->
+    <PackageReference Include="Microsoft.Agents.AI.Workflows" />
+    <PackageReference Include="Microsoft.Agents.AI.Workflows.Declarative" />
+    <PackageReference Include="Microsoft.Agents.AI.Workflows.Declarative.Foundry" />
+    <PackageReference Include="Azure.AI.Projects" />
+    <PackageReference Include="Azure.Identity" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\appsettings.json" Link="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="agent.yaml" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="workflow.yaml" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

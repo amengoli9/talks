@@ -1,0 +1,13 @@
+{
+  "profiles": {
+    "D10.Handoff": {
+      "commandName": "Project",
+      "launchUrl": "devui",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:50517;http://localhost:50519"
+    }
+  }
+}

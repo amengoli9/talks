@@ -1,0 +1,288 @@
+@page "/"
+@rendermode InteractiveServer
+@inject AIAgent Agent
+@using Microsoft.Agents.AI
+@using Microsoft.Extensions.AI
+@using System.Text.Json
+
+<PageTitle>Travel Agent (AG-UI demo)</PageTitle>
+
+<div class="layout">
+    <header>
+        <strong>D13 - AG-UI + Blazor</strong>
+        <span class="sub">Travel agent backed by AG-UI streaming</span>
+        <button class="reset" @onclick="ResetConversation">New chat</button>
+    </header>
+
+    <main>
+        <section class="chat-panel">
+            <div class="messages">
+                @foreach (var entry in _messages)
+                {
+                    <div class="bubble @entry.RoleClass">
+                        @if (entry.Role == "user")
+                        {
+                            <div class="role">Tu</div>
+                        }
+                        else if (entry.Role == "agent")
+                        {
+                            <div class="role">Agent</div>
+                        }
+                        else if (entry.Role == "tool-call")
+                        {
+                            <div class="role">tool call</div>
+                        }
+                        else if (entry.Role == "tool-result")
+                        {
+                            <div class="role">tool result</div>
+                        }
+                        <div class="text">@entry.Text</div>
+                    </div>
+                }
+                @if (_streaming)
+                {
+                    <div class="bubble agent thinking">
+                        <div class="role">Agent</div>
+                        <div class="text"><em>...</em></div>
+                    </div>
+                }
+            </div>
+
+            <div class="input-bar">
+                <textarea
+                    @bind="_input"
+                    @bind:event="oninput"
+                    @onkeydown="OnKeyDown"
+                    placeholder="Es. Che meteo fa a Torino? Cosa visito? Prenota Torino-Roma per il 2026-06-01."
+                    disabled="@_streaming"
+                    rows="2"></textarea>
+                <button @onclick="SendAsync" disabled="@(_streaming || string.IsNullOrWhiteSpace(_input))">Invia</button>
+            </div>
+        </section>
+
+        <aside class="activity-panel">
+            <h3>Activity log</h3>
+            <p class="hint">Eventi AG-UI in ordine cronologico.</p>
+            <ul>
+                @foreach (var item in _activity)
+                {
+                    <li class="@item.Kind">
+                        <span class="dot"></span>
+                        <span class="label">@item.Label</span>
+                        @if (!string.IsNullOrEmpty(item.Detail))
+                        {
+                            <code>@item.Detail</code>
+                        }
+                    </li>
+                }
+            </ul>
+        </aside>
+    </main>
+
+    @if (_pendingApproval is { } pending)
+    {
+        <div class="modal-backdrop">
+            <div class="modal">
+                <h2>Approvazione richiesta</h2>
+                <p>L'agente vuole eseguire una operazione sensibile:</p>
+                <div class="call-card">
+                    <div><strong>@pending.FunctionName</strong></div>
+                    @if (pending.Arguments is { Count: > 0 })
+                    {
+                        <ul>
+                            @foreach (var arg in pending.Arguments)
+                            {
+                                <li><code>@arg.Key</code>: <code>@arg.Value</code></li>
+                            }
+                        </ul>
+                    }
+                </div>
+                <div class="actions">
+                    <button class="reject" @onclick="() => RespondToApproval(false)">Rifiuta</button>
+                    <button class="approve" @onclick="() => RespondToApproval(true)">Approva</button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private readonly List<ChatMessage> _conversation = [];
+    private readonly List<MessageEntry> _messages = [];
+    private readonly List<ActivityEntry> _activity = [];
+    private AgentSession? _session;
+    private string _input = string.Empty;
+    private bool _streaming;
+    private MessageEntry? _streamingAgentBubble;
+    private PendingApproval? _pendingApproval;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _session = await Agent.CreateSessionAsync();
+        AddActivity("info", "Sessione AG-UI inizializzata");
+    }
+
+    private async Task OnKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !e.ShiftKey)
+        {
+            await SendAsync();
+        }
+    }
+
+    private async Task SendAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_input) || _streaming) return;
+
+        string text = _input.Trim();
+        _input = string.Empty;
+
+        var userMsg = new ChatMessage(ChatRole.User, text);
+        _conversation.Add(userMsg);
+        _messages.Add(new MessageEntry("user", text));
+        AddActivity("user", "user message", text.Length > 60 ? text[..60] + "..." : text);
+
+        await StreamingTurnAsync(extraMessages: null);
+    }
+
+    private async Task StreamingTurnAsync(IList<ChatMessage>? extraMessages)
+    {
+        _streaming = true;
+        _streamingAgentBubble = null;
+        StateHasChanged();
+
+        var inputMessages = extraMessages is null ? _conversation : _conversation.Concat(extraMessages).ToList();
+
+        try
+        {
+            List<AgentResponseUpdate> updates = [];
+
+            await foreach (var update in Agent.RunStreamingAsync(inputMessages, _session))
+            {
+                updates.Add(update);
+                foreach (var content in update.Contents)
+                {
+                    await HandleContentAsync(content);
+                }
+                await InvokeAsync(StateHasChanged);
+            }
+
+            // Salva la conversazione completa
+            var response = updates.ToAgentResponse();
+            _conversation.AddRange(response.Messages);
+
+            // Se e' arrivata una richiesta di approvazione, mettiamo in pausa
+            // (il pendingApproval e' gia' settato dal HandleContentAsync).
+        }
+        catch (Exception ex)
+        {
+            AddActivity("error", "errore", ex.Message);
+            _messages.Add(new MessageEntry("agent", $"[errore: {ex.Message}]"));
+        }
+        finally
+        {
+            _streaming = false;
+            _streamingAgentBubble = null;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+#pragma warning disable MEAI001 // ToolApproval* sono experimental
+    private Task HandleContentAsync(AIContent content)
+    {
+        switch (content)
+        {
+            case TextContent tc when !string.IsNullOrEmpty(tc.Text):
+                if (_streamingAgentBubble is null)
+                {
+                    _streamingAgentBubble = new MessageEntry("agent", string.Empty);
+                    _messages.Add(_streamingAgentBubble);
+                }
+                _streamingAgentBubble.Text += tc.Text;
+                AddActivity("agent-chunk", "agent text", tc.Text.Length > 40 ? tc.Text[..40] + "..." : tc.Text);
+                break;
+
+            case FunctionCallContent fc when fc.Name != "request_approval":
+                string argsLabel = fc.Arguments is null ? "()" : "(" + string.Join(", ", fc.Arguments.Select(kv => $"{kv.Key}={kv.Value}")) + ")";
+                _messages.Add(new MessageEntry("tool-call", $"{fc.Name}{argsLabel}"));
+                AddActivity("tool-call", $"tool call: {fc.Name}", argsLabel);
+                _streamingAgentBubble = null;
+                break;
+
+            case FunctionResultContent fr:
+                _messages.Add(new MessageEntry("tool-result", $"{fr.Result}"));
+                AddActivity("tool-result", "tool result", fr.Result?.ToString() ?? "");
+                _streamingAgentBubble = null;
+                break;
+
+            case ToolApprovalRequestContent approval when approval.ToolCall is FunctionCallContent fcc:
+                _pendingApproval = new PendingApproval(
+                    RequestId: approval.RequestId,
+                    FunctionName: fcc.Name,
+                    Arguments: fcc.Arguments ?? new Dictionary<string, object?>(),
+                    Approval: approval);
+                AddActivity("approval-req", $"approval requested: {fcc.Name}", "in attesa...");
+                break;
+        }
+        return Task.CompletedTask;
+    }
+
+    private async Task RespondToApproval(bool approved)
+    {
+        if (_pendingApproval is not { } p) return;
+
+        var responseContent = p.Approval.CreateResponse(approved);
+
+        AddActivity(approved ? "approval-yes" : "approval-no",
+            approved ? "approval -> YES" : "approval -> NO",
+            p.FunctionName);
+
+        // Per la UI mostriamo la decisione come bubble.
+        _messages.Add(new MessageEntry("user", approved ? "[Approvato]" : "[Rifiutato]"));
+
+        // Ricostruiamo il messaggio "tool" che restituisce la risposta di approvazione.
+        var toolMsg = new ChatMessage(ChatRole.Tool, [responseContent]);
+
+        _pendingApproval = null;
+
+        await StreamingTurnAsync(extraMessages: [toolMsg]);
+    }
+#pragma warning restore MEAI001
+
+    private void AddActivity(string kind, string label, string detail = "")
+    {
+        _activity.Add(new ActivityEntry(kind, label, detail));
+        if (_activity.Count > 100) _activity.RemoveAt(0);
+    }
+
+    private async Task ResetConversation()
+    {
+        _conversation.Clear();
+        _messages.Clear();
+        _activity.Clear();
+        _pendingApproval = null;
+        _input = string.Empty;
+        _streaming = false;
+        _session = await Agent.CreateSessionAsync();
+        AddActivity("info", "nuova sessione");
+        StateHasChanged();
+    }
+
+    private sealed class MessageEntry
+    {
+        public MessageEntry(string role, string text) { Role = role; Text = text; }
+        public string Role { get; }
+        public string Text { get; set; }
+        public string RoleClass => Role;
+    }
+
+    private sealed record ActivityEntry(string Kind, string Label, string Detail);
+
+#pragma warning disable MEAI001
+    private sealed record PendingApproval(
+        string RequestId,
+        string FunctionName,
+        IDictionary<string, object?> Arguments,
+        ToolApprovalRequestContent Approval);
+#pragma warning restore MEAI001
+}
