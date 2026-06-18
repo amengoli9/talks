@@ -1,0 +1,30 @@
+<Solution>
+  <Folder Name="/BeyondXUnit/">
+    <Project Path="BeyondXUnit/Piadineria.Analyzers.Sample/Piadineria.Analyzers.Sample.csproj" />
+    <Project Path="BeyondXUnit/Piadineria.Analyzers/Piadineria.Analyzers.csproj" />
+    <Project Path="BeyondXUnit/Piadineria.Chaos/Piadineria.Chaos.csproj" />
+    <Project Path="BeyondXUnit/Piadineria.Load/Piadineria.Load.csproj" />
+    <Project Path="BeyondXUnit/Piadineria.Pricing.Tests/Piadineria.Pricing.Tests.csproj" />
+    <Project Path="BeyondXUnit/Piadineria.Pricing/Piadineria.Pricing.csproj" />
+    <Project Path="BeyondXUnit/Piadineria.Vulnerable/Piadineria.Vulnerable.csproj" />
+  </Folder>
+  <Folder Name="/DomainPiadineria/" />
+  <Folder Name="/DomainPiadineria/src/">
+    <Project Path="DomainPiadineria/src/DomainPiadineria.Domain/DomainPiadineria.Domain.csproj" />
+  </Folder>
+  <Folder Name="/DomainPiadineria/tests/">
+    <Project Path="DomainPiadineria/tests/DomainPiadineria.ArchitectureTests/DomainPiadineria.ArchitectureTests.csproj" />
+  </Folder>
+  <Folder Name="/HexagonalPiadineria/" />
+  <Folder Name="/HexagonalPiadineria/src/">
+    <Project Path="HexagonalPiadineria/src/HexagonalPiadineria.Domain/HexagonalPiadineria.Domain.csproj" />
+    <Project Path="HexagonalPiadineria/src/HexagonalPiadineria.Infrastructure/HexagonalPiadineria.Infrastructure.csproj" />
+    <Project Path="HexagonalPiadineria/src/HexagonalPiadineria.WebApp/HexagonalPiadineria.WebApp.csproj" />
+  </Folder>
+  <Folder Name="/HexagonalPiadineria/tests/">
+    <Project Path="HexagonalPiadineria/tests/HexagonalPiadineria.ArchitectureTests/HexagonalPiadineria.ArchitectureTests.csproj" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path="README.md" />
+  </Folder>
+</Solution>

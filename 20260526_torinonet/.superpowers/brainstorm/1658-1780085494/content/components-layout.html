@@ -1,0 +1,120 @@
+<h2>Componenti Angular sul layout</h2>
+<p class="subtitle">Mappatura component → area UI. Confermi questa struttura?</p>
+
+<div class="mockup">
+  <div class="mockup-header">D15 – AG-UI Angular · http://localhost:4200</div>
+  <div class="mockup-body" style="padding:0;display:flex;height:420px;font-family:monospace;font-size:11px;background:#0f1117;border-radius:0 0 6px 6px;overflow:hidden">
+
+    <!-- SIDEBAR -->
+    <div style="width:220px;background:#141622;border-right:1px solid #252840;display:flex;flex-direction:column;flex-shrink:0">
+      <div style="padding:12px 14px;border-bottom:1px solid #252840">
+        <div style="color:#fff;font-size:12px;font-weight:600">🤖 Travel Agent</div>
+        <div style="color:#555;font-size:9px;margin-top:2px">AG-UI · D13 server :5100</div>
+      </div>
+
+      <!-- session list -->
+      <div style="flex:1;padding:8px 6px;display:flex;flex-direction:column;gap:2px;overflow-y:auto">
+        <div style="color:#555;font-size:9px;padding:4px 8px;letter-spacing:.05em">SESSIONI</div>
+        <div style="background:#1e2030;border-radius:5px;padding:7px 10px;color:#c8d3f5;font-size:10px">Chat corrente</div>
+        <div style="padding:7px 10px;color:#555;font-size:10px">Sessione 2</div>
+        <div style="padding:7px 10px;color:#555;font-size:10px">Sessione 3</div>
+      </div>
+
+      <!-- new chat -->
+      <div style="padding:10px 10px;border-top:1px solid #252840">
+        <div style="background:#3b5bdb;color:#fff;border-radius:6px;padding:7px;text-align:center;font-size:10px;cursor:pointer">+ Nuova chat</div>
+      </div>
+
+      <!-- label -->
+      <div style="background:rgba(59,91,219,.15);border:1px dashed #3b5bdb;border-radius:4px;margin:6px;padding:4px 6px;font-size:8px;color:#748ffc;text-align:center">&lt;app-sidebar&gt;</div>
+    </div>
+
+    <!-- CHAT AREA -->
+    <div style="flex:1;display:flex;flex-direction:column;position:relative">
+
+      <!-- messages -->
+      <div style="flex:1;padding:14px 16px;display:flex;flex-direction:column;gap:8px;overflow-y:auto">
+        <div style="align-self:flex-end;background:#3b5bdb;color:#fff;border-radius:12px 12px 2px 12px;padding:7px 12px;font-size:10px;max-width:65%">Prenota Torino→Roma per il 15 giugno</div>
+        <div style="align-self:flex-start;background:#1e2030;color:#c8d3f5;border-radius:12px 12px 12px 2px;padding:7px 12px;font-size:10px;max-width:70%">Certo! Verifico disponibilità e procedo con la prenotazione...</div>
+        <div style="align-self:flex-start;background:#2a1f3d;color:#c792ea;border-radius:6px;padding:5px 10px;font-size:9px;font-style:italic">⚙ tool call: book_trip(from=Torino, to=Roma, date=2026-06-15)</div>
+      </div>
+
+      <!-- input bar -->
+      <div style="padding:10px 14px;border-top:1px solid #252840;display:flex;gap:8px">
+        <div style="flex:1;background:#1e2030;border-radius:8px;padding:8px 12px;font-size:10px;color:#555">Scrivi un messaggio... (Enter per inviare)</div>
+        <div style="background:#3b5bdb;color:#fff;border-radius:8px;padding:8px 14px;font-size:10px">→</div>
+      </div>
+
+      <!-- label -->
+      <div style="background:rgba(59,91,219,.1);border:1px dashed #3b5bdb;border-radius:4px;position:absolute;top:4px;left:4px;padding:3px 6px;font-size:8px;color:#748ffc">&lt;app-chat&gt;</div>
+
+      <!-- HITL MODAL OVERLAY -->
+      <div style="position:absolute;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;border-radius:0 0 6px 6px">
+        <div style="background:#1a1d27;border:1px solid #3b5bdb;border-radius:10px;padding:18px 22px;width:280px">
+          <div style="color:#fff;font-size:12px;font-weight:600;margin-bottom:4px">⚠ Approvazione richiesta</div>
+          <div style="color:#8b8b9e;font-size:9px;margin-bottom:12px">L'agente vuole eseguire un'operazione sensibile</div>
+          <div style="background:#252840;border-radius:6px;padding:10px;margin-bottom:14px">
+            <div style="color:#c792ea;font-size:10px;font-weight:600;margin-bottom:6px">book_trip</div>
+            <div style="font-size:9px;color:#8b8b9e;display:flex;flex-direction:column;gap:3px">
+              <div><span style="color:#748ffc">from</span>: Torino</div>
+              <div><span style="color:#748ffc">to</span>: Roma</div>
+              <div><span style="color:#748ffc">date</span>: 2026-06-15</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <div style="flex:1;background:#3d1515;color:#ff6b6b;border-radius:6px;padding:7px;text-align:center;font-size:10px">Rifiuta</div>
+            <div style="flex:1;background:#1a3d2b;color:#69db7c;border-radius:6px;padding:7px;text-align:center;font-size:10px">Approva</div>
+          </div>
+          <div style="background:rgba(59,91,219,.15);border:1px dashed #3b5bdb;border-radius:4px;margin-top:8px;padding:3px 6px;font-size:8px;color:#748ffc;text-align:center">&lt;app-approval-modal&gt;</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+  <div style="background:#141622;border-radius:8px;padding:12px">
+    <div style="color:#748ffc;font-size:10px;font-weight:600;margin-bottom:6px">&lt;app-sidebar&gt;</div>
+    <div style="color:#8b8b9e;font-size:9px;line-height:1.6">
+      • Lista sessioni (signal)<br>
+      • "Nuova chat" → service.newSession()<br>
+      • Click → service.switchSession(id)
+    </div>
+  </div>
+  <div style="background:#141622;border-radius:8px;padding:12px">
+    <div style="color:#748ffc;font-size:10px;font-weight:600;margin-bottom:6px">&lt;app-chat&gt;</div>
+    <div style="color:#8b8b9e;font-size:9px;line-height:1.6">
+      • messages signal → bubble list<br>
+      • streaming signal → indicatore<br>
+      • Input → service.sendMessage()<br>
+      • tool-call bubble per ogni tool
+    </div>
+  </div>
+  <div style="background:#141622;border-radius:8px;padding:12px">
+    <div style="color:#748ffc;font-size:10px;font-weight:600;margin-bottom:6px">&lt;app-approval-modal&gt;</div>
+    <div style="color:#8b8b9e;font-size:9px;line-height:1.6">
+      • Input: pendingApproval signal<br>
+      • Mostra nome funzione + args<br>
+      • Approva/Rifiuta → service<br>
+        .sendApprovalResult(bool)
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:16px;background:#141622;border-radius:8px;padding:12px">
+  <div style="color:#748ffc;font-size:10px;font-weight:600;margin-bottom:8px">AguiService (core)</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:9px;color:#8b8b9e;line-height:1.7">
+    <div>
+      <div style="color:#c8d3f5;margin-bottom:3px">Signals</div>
+      sessions · activeSessionId · messages · streaming · pendingApproval
+    </div>
+    <div>
+      <div style="color:#c8d3f5;margin-bottom:3px">Metodi</div>
+      sendMessage(text) · sendApprovalResult(approved) · newSession() · switchSession(id)
+    </div>
+  </div>
+  <div style="margin-top:8px;background:#0f1117;border-radius:4px;padding:8px;font-size:9px;color:#c792ea">
+    HttpAgent (@ag-ui/client v0.0.53) — subscriber: onTextMessageContentEvent → append · onToolCallStartEvent("request_approval") → pendingApproval
+  </div>
+</div>

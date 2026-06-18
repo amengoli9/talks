@@ -1,0 +1,79 @@
+<h2>Layout del chat Angular</h2>
+<p class="subtitle">Quale struttura preferisci per l'app AG-UI?</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="fullscreen" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0f1117;border-radius:6px;padding:12px;font-family:monospace;font-size:11px;color:#8b8b9e">
+      <div style="background:#1a1d27;border-radius:4px;padding:6px 10px;margin-bottom:8px;color:#fff;font-size:10px;display:flex;justify-content:space-between">
+        <span>🤖 D15 – AG-UI Angular</span>
+        <span style="color:#666;cursor:pointer">New chat ↺</span>
+      </div>
+      <div style="height:120px;overflow:hidden;display:flex;flex-direction:column;gap:6px;padding:4px 0">
+        <div style="align-self:flex-end;background:#3b5bdb;color:#fff;border-radius:12px 12px 2px 12px;padding:5px 10px;font-size:10px;max-width:70%">Prenota Torino→Roma 15 giugno</div>
+        <div style="align-self:flex-start;background:#1e2030;color:#c8d3f5;border-radius:12px 12px 12px 2px;padding:5px 10px;font-size:10px;max-width:75%">Certo! Prima devo verificare la disponibilità...</div>
+        <div style="align-self:flex-start;background:#2a1f3d;color:#c792ea;border-radius:6px;padding:4px 8px;font-size:9px;font-style:italic">⚙ tool call: book_trip(from=Torino, to=Roma, date=2026-06-15)</div>
+        <div style="background:rgba(255,165,0,0.15);border:1px solid rgba(255,165,0,0.4);border-radius:6px;padding:6px 8px;font-size:9px;color:#ffa94d;text-align:center">⚠ Approvazione richiesta: book_trip</div>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <div style="flex:1;background:#1e2030;border-radius:6px;padding:5px 8px;font-size:9px;color:#555">Scrivi un messaggio...</div>
+        <div style="background:#3b5bdb;color:#fff;border-radius:6px;padding:5px 10px;font-size:9px">→</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Full-screen chat</h3>
+      <p>Layout a tutta larghezza stile ChatGPT. Messaggi in colonna, input fisso in basso. Il modal HITL appare come overlay centrato. Massimo spazio per i messaggi.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="centered" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0f1117;border-radius:6px;padding:12px;font-family:monospace;font-size:11px;color:#8b8b9e;display:flex;justify-content:center">
+      <div style="width:75%;background:#1a1d27;border-radius:8px;overflow:hidden">
+        <div style="background:#141622;padding:6px 12px;font-size:10px;color:#fff;display:flex;justify-content:space-between;border-bottom:1px solid #252840">
+          <span>🤖 Travel Agent</span><span style="color:#555">↺</span>
+        </div>
+        <div style="height:120px;overflow:hidden;display:flex;flex-direction:column;gap:5px;padding:8px">
+          <div style="align-self:flex-end;background:#3b5bdb;color:#fff;border-radius:10px 10px 2px 10px;padding:4px 8px;font-size:9px">Prenota Torino→Roma 15 giugno</div>
+          <div style="align-self:flex-start;background:#252840;color:#c8d3f5;border-radius:10px 10px 10px 2px;padding:4px 8px;font-size:9px">Verifico disponibilità...</div>
+          <div style="align-self:flex-start;background:#2a1f3d;color:#c792ea;border-radius:5px;padding:3px 7px;font-size:8px">⚙ book_trip(...)</div>
+        </div>
+        <div style="display:flex;gap:5px;padding:6px;border-top:1px solid #252840">
+          <div style="flex:1;background:#252840;border-radius:5px;padding:4px 7px;font-size:8px;color:#555">Messaggio...</div>
+          <div style="background:#3b5bdb;color:#fff;border-radius:5px;padding:4px 8px;font-size:8px">→</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Card centrata (max-width)</h3>
+      <p>Chat contenuta in una card centrata (es. 720px). Sfondo scuro esterno, card con bordi arrotondati. Simile a Claude.ai. Ideale per demo su monitor wide.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="sidebar" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0f1117;border-radius:6px;padding:12px;font-family:monospace;font-size:11px;color:#8b8b9e">
+      <div style="display:flex;gap:8px;height:150px">
+        <div style="width:28%;background:#141622;border-radius:6px;padding:6px;border-right:1px solid #252840">
+          <div style="font-size:9px;color:#555;margin-bottom:6px">SESSIONI</div>
+          <div style="background:#1e2030;border-radius:4px;padding:4px 6px;font-size:9px;color:#c8d3f5;margin-bottom:3px">Chat corrente</div>
+          <div style="padding:4px 6px;font-size:9px;color:#555">Chat precedente</div>
+          <div style="padding:4px 6px;font-size:9px;color:#555">Chat 3 giorni fa</div>
+          <div style="margin-top:auto;padding-top:8px;border-top:1px solid #252840;font-size:9px;color:#3b5bdb;cursor:pointer">+ Nuova chat</div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:5px">
+          <div style="align-self:flex-end;background:#3b5bdb;color:#fff;border-radius:8px;padding:4px 8px;font-size:9px">Prenota Torino→Roma</div>
+          <div style="align-self:flex-start;background:#1e2030;color:#c8d3f5;border-radius:8px;padding:4px 8px;font-size:9px">Certo, verifico...</div>
+          <div style="align-self:flex-start;background:#2a1f3d;color:#c792ea;border-radius:5px;padding:3px 6px;font-size:8px">⚙ book_trip(...)</div>
+          <div style="margin-top:auto;display:flex;gap:4px">
+            <div style="flex:1;background:#1e2030;border-radius:5px;padding:3px 6px;font-size:8px;color:#555">Messaggio...</div>
+            <div style="background:#3b5bdb;color:#fff;border-radius:5px;padding:3px 6px;font-size:8px">→</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Sidebar + chat</h3>
+      <p>Pannello sinistro con lista sessioni, area chat a destra. Più vicino a un'app reale con storico conversazioni. Più complesso da implementare.</p>
+    </div>
+  </div>
+
+</div>

@@ -1,0 +1,108 @@
+<h2>Architettura — D15 con persistenza per-utente</h2>
+<p class="subtitle">Approccio B: nuovo D15-server per storia + D13 invariato. Confermi questa struttura?</p>
+
+<div style="background:#0f1117;border-radius:8px;padding:20px;font-family:monospace;font-size:11px;color:#c8d3f5">
+
+  <!-- Browser row -->
+  <div style="display:flex;justify-content:center;margin-bottom:24px">
+    <div style="background:#1a1d27;border:2px solid #3b5bdb;border-radius:8px;padding:12px 24px;text-align:center;width:220px">
+      <div style="color:#748ffc;font-size:10px;margin-bottom:4px">BROWSER</div>
+      <div style="color:#fff;font-size:12px;font-weight:600">Angular :4200</div>
+      <div style="color:#555;font-size:9px;margin-top:4px">AuthService · LoginComponent<br>HistoryService · AguiService</div>
+    </div>
+  </div>
+
+  <!-- Arrows row -->
+  <div style="display:flex;justify-content:center;gap:80px;margin-bottom:8px;font-size:9px;color:#748ffc">
+    <div style="text-align:center;width:180px">
+      <div>JWT in header</div>
+      <div style="color:#555">REST /api/sessions/*</div>
+      <div style="font-size:14px;color:#3b5bdb">↕</div>
+    </div>
+    <div style="text-align:center;width:180px">
+      <div>JWT in header</div>
+      <div style="color:#555">POST /ag-ui (SSE)</div>
+      <div style="font-size:14px;color:#3b5bdb">↕</div>
+    </div>
+  </div>
+
+  <!-- Servers row -->
+  <div style="display:flex;justify-content:center;gap:20px">
+
+    <!-- D15 Server -->
+    <div style="background:#1a1d27;border:2px solid #2ecc71;border-radius:8px;padding:14px;width:240px">
+      <div style="color:#2ecc71;font-size:10px;margin-bottom:4px">NUOVO ✦ ASP.NET Core</div>
+      <div style="color:#fff;font-size:12px;font-weight:600;margin-bottom:8px">D15-Server :5200</div>
+
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <div style="background:#252840;border-radius:4px;padding:5px 8px;font-size:9px">
+          <span style="color:#748ffc">●</span> JWT middleware (Bearer, HS256)<br>
+          <span style="color:#555;margin-left:10px">estrae userId dal claim "sub"</span>
+        </div>
+        <div style="background:#252840;border-radius:4px;padding:5px 8px;font-size:9px">
+          <span style="color:#748ffc">●</span> GET /api/sessions<br>
+          <span style="color:#748ffc">●</span> GET /api/sessions/{id}<br>
+          <span style="color:#748ffc">●</span> POST /api/sessions/{id}<br>
+          <span style="color:#748ffc">●</span> DELETE /api/sessions/{id}
+        </div>
+        <div style="background:#252840;border-radius:4px;padding:5px 8px;font-size:9px">
+          <span style="color:#748ffc">●</span> EF Core 9 + SQLite<br>
+          <span style="color:#555;margin-left:10px">auto-migrate on startup</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- D13 Server -->
+    <div style="background:#1a1d27;border:2px solid #555;border-radius:8px;padding:14px;width:200px;opacity:.8">
+      <div style="color:#555;font-size:10px;margin-bottom:4px">INVARIATO</div>
+      <div style="color:#aaa;font-size:12px;font-weight:600;margin-bottom:8px">D13-Server :5100</div>
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <div style="background:#1e2030;border-radius:4px;padding:5px 8px;font-size:9px;color:#666">
+          MAF travel agent<br>
+          POST /ag-ui (SSE)<br>
+          <span style="color:#444">JWT: header presente<br>ma non validato (ora)</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SQLite row -->
+  <div style="display:flex;justify-content:center;margin-top:16px">
+    <div style="background:#1a1d27;border:1px dashed #2ecc71;border-radius:6px;padding:8px 20px;text-align:center;font-size:9px;color:#2ecc71">
+      SQLite: sessions (userId, sessionId, label, messagesJson, displayMessagesJson, createdAt, updatedAt)
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:20px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+
+  <div style="background:#141622;border-radius:8px;padding:14px">
+    <div style="color:#2ecc71;font-size:10px;font-weight:600;margin-bottom:8px">Angular — nuovi file</div>
+    <div style="font-size:9px;color:#8b8b9e;line-height:1.8">
+      <span style="color:#748ffc">auth/auth.service.ts</span> — token in localStorage, decode JWT per userId<br>
+      <span style="color:#748ffc">auth/login/login.component</span> — incolla token → login<br>
+      <span style="color:#748ffc">history/history.service.ts</span> — REST client → D15-server<br>
+      <span style="color:#748ffc">app.ts</span> — @if auth → app | login
+    </div>
+  </div>
+
+  <div style="background:#141622;border-radius:8px;padding:14px">
+    <div style="color:#3b5bdb;font-size:10px;font-weight:600;margin-bottom:8px">AguiService — cambiamenti</div>
+    <div style="font-size:9px;color:#8b8b9e;line-height:1.8">
+      constructor: carica sessioni da HistoryService<br>
+      onRunFinishedEvent: salva su backend<br>
+      newSession(): crea locale + salva backend<br>
+      switchSession(): carica da backend se non in memoria<br>
+      HttpAgent headers: Authorization: Bearer token<br>
+      <span style="color:#444">(D13 lo ignora per ora)</span>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:12px;background:#1a1d27;border-radius:6px;padding:10px 14px;font-size:9px;color:#8b8b9e">
+  <span style="color:#ffa94d">⚠ Predisponilo scope:</span>
+  D15-server valida JWT ma <strong style="color:#c8d3f5">non emette token</strong> (il tuo auth server lo fa).
+  Il LoginComponent accetta qualsiasi JWT valido firmato con la chiave configurata in appsettings.
+</div>
