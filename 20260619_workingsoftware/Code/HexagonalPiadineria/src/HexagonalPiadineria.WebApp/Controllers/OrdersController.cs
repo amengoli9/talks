@@ -38,7 +38,7 @@ public sealed class OrdersController : ControllerBase
     // ─────────────────────────────────────────────────────────────────────────────
     // 🔴 DEMO erosione (§1) — 2/2: il GET /orders dà solo la lista; "mi serviva il
     //   dettaglio di un tavolo e l'ho preso al volo dal DbContext", invece di esporlo
-    //   dallo use case. Scommenta l'using EF in testa e il metodo qui sotto: la build
+    //   dal dominio. Scommenta l'using EF in testa e il metodo qui sotto: la build
     //   resta VERDE, l'endpoint compare in Scalar e funziona... ma adesso il controller
     //   interroga DIRETTAMENTE il database (DbContext via [FromServices]), scavalcando
     //   porta e use case. → Controller_should_not_depend_on_persistence diventa ROSSO.

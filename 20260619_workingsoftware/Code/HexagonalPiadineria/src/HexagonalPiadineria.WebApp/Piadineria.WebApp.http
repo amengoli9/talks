@@ -7,7 +7,9 @@ Content-Type: application/json
 {
   "table": 7,
   "lines": [
-    { "piada": "squacquerone e rucola", "price": 5.0, "quantity": 12 }
+    { "piada": "squacquerone e rucola", 
+    "price": 5.0, 
+    "quantity": 12 }
   ]
 }
 
@@ -18,14 +20,23 @@ Content-Type: application/json
 {
   "table": 3,
   "lines": [
-    { "piada": "crudo e squacquerone", "price": 6.0, "quantity": 2 },
-    { "piada": "nutella per i burdel", "price": 4.5, "quantity": 1 }
+    { "piada": "crudo e squacquerone", 
+      "price": 6.0, "quantity": 2 },
+    { "piada": "nutella per i burdel", 
+      "price": 4.5, "quantity": 1 }
   ]
 }
 
-### Elenco degli ordini (via use case + porta — la strada pulita)
+### Elenco degli ordini (via domain + porta — la strada pulita)
 GET {{host}}/orders
 Accept: application/json
+
+### 🔴 DEMO: dettaglio per tavolo — risponde SOLO se hai scommentato il blocco demo
+###         nel controller (che legge dal DbContext direttamente → test ROSSO)
+GET {{host}}/orders/7
+Accept: application/json
+
+
 
 ### Ordine non valido: nessuna riga → 400 Bad Request
 POST {{host}}/orders
@@ -36,7 +47,3 @@ Content-Type: application/json
   "lines": []
 }
 
-### 🔴 DEMO: dettaglio per tavolo — risponde SOLO se hai scommentato il blocco demo
-###         nel controller (che legge dal DbContext direttamente → test ROSSO)
-GET {{host}}/orders/7
-Accept: application/json

@@ -6,7 +6,7 @@ using static HexagonalPiadineria.ArchitectureTests.Architecture;
 
 namespace HexagonalPiadineria.ArchitectureTests;
 
-public class HexagonTests
+public class HexagonalTests
 {
     [Fact]
     public void Core_should_not_depend_on_adapters()
@@ -59,4 +59,6 @@ public class HexagonTests
 
         rule.Check(Model);
     }
+
+
 }

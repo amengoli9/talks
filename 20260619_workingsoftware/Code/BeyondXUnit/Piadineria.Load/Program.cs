@@ -17,7 +17,7 @@ using NBomber.Http.CSharp;
 // ROSSA e il processo esce con exit code 1 (in CI la build non passa).
 // ─────────────────────────────────────────────────────────────────────────────
 
-const int sloP95Ms = 100;   // SLO: p95 < 100 ms
+const int sloP95Ms = 100;   // SLO: p90 < 200 ms
 
 // Ogni ordine è identificato dal tavolo (chiave). Usiamo un tavolo diverso a ogni
 // richiesta — altrimenti l'inserimento collide sulla chiave già presente.

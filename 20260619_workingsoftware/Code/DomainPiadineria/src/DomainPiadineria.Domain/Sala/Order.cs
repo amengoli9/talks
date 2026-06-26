@@ -1,6 +1,8 @@
 // 🔴 DEMO isolamento domini — 1/2: scommenta anche questo using.
 // using DomainPiadineria.Domain.Cucina;
 
+using DomainPiadineria.Domain.Cucina;
+
 namespace DomainPiadineria.Domain.Sala;
 
 public sealed record OrderLine(string Piada, decimal UnitPrice, int Quantity)
@@ -25,8 +27,8 @@ public sealed class Order
     //   direttamente dalla Piada della Cucina, invece di riceverne uno snapshot
     //   (nome + prezzo). Così la Sala dipende dalla Cucina e i due domini non sono
     //   più isolati: Sala_should_not_depend_on_Cucina diventa ROSSO.
-    // public void AddFromKitchen(Piada piada, int quantity) =>
-    //     Add(new OrderLine(piada.Farcitura.ToString(), piada.Prezzo, quantity));
+    public void AddFromKitchen(Piada piada, int quantity) =>
+        Add(new OrderLine(piada.Farcitura.ToString(), piada.Prezzo, quantity));
 
     public decimal Subtotal => _lines.Sum(l => l.Total);
 
