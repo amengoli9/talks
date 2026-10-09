@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="HITL in Microsoft Agent Framework: approvazione dei tool, permessi di sessione, AutoApprovalRules, planning e workflow. Guida interattiva offline per AI Day Torino.">
+<title>Chi dà il via? · HITL con HarnessAgent</title>
+<style>
+:root{--ink:#152332;--muted:#4b5d6b;--paper:#f6f5ef;--line:#d5dbd8;--navy:#122a38;--coral:#ffaf8b;--green:#156149;--amber:#825407;--red:#9c3030;--mono:Consolas,"Cascadia Code",monospace}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:85px}body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.65 "Segoe UI",system-ui,sans-serif}a{color:#125b72;text-underline-offset:4px}button,input,select{font:inherit}button,a,input,select,summary{outline-offset:5px}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid #126f91}button{cursor:pointer}button:disabled{cursor:default;opacity:.48}button,.button{border:1px solid #a9b8bb;border-radius:8px;padding:10px 16px;background:#fff;color:var(--ink);font-weight:600;text-decoration:none;display:inline-block}button:hover:not(:disabled),.button:hover{background:#e8eeea}.primary{background:var(--navy);border-color:var(--navy);color:white}.primary:hover:not(:disabled){background:#254858}.danger{color:var(--red);border-color:#d6a7a1}header{background:var(--navy);color:#fff}nav{position:sticky;top:0;z-index:5;background:var(--paper);border-bottom:1px solid var(--line)}.nav-inner{max-width:1180px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:12px 28px}.brand{font-weight:800;font-size:15px;letter-spacing:.06em;color:var(--ink);text-decoration:none}.nav-links{display:flex;gap:22px;flex-wrap:wrap;font-size:14px}.nav-links a{text-decoration:none;color:var(--ink)}.wrap{max-width:1180px;margin:auto;padding:0 28px}.hero{padding:68px 0 60px;display:grid;grid-template-columns:1.1fr 1fr;gap:64px;align-items:center}.eyebrow{font-size:12px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:#a9cbc9;margin-bottom:20px}h1{font-size:clamp(40px,5.3vw,66px);line-height:1.08;letter-spacing:-.05em;margin:0 0 24px;font-weight:750}h1 em{font-style:normal;color:var(--coral)}.lead{font-size:20px;max-width:570px;line-height:1.55}.hero .lead{color:#d2e2e5}.hero .button{margin-top:12px;background:var(--coral);border-color:var(--coral);color:var(--navy)}.hero-figure{border-left:1px solid #46616a;padding-left:32px}.hero-step{display:grid;grid-template-columns:36px 1fr;gap:12px;margin:20px 0;align-items:start}.step-number{border:1px solid #6a929a;border-radius:50%;height:32px;display:grid;place-items:center;font:13px var(--mono);color:var(--coral)}.hero-step strong{display:block;font-size:19px}.hero-step small{color:#b3cdd0;font-size:15px}.hero-note{color:#b3cdd0;font-size:13px;margin-top:28px}main section{padding:58px 0;border-bottom:1px solid var(--line)}.section-head{display:flex;align-items:baseline;gap:22px;margin-bottom:18px}.section-id{font:14px var(--mono);color:var(--green)}h2{font-size:clamp(28px,3vw,38px);line-height:1.2;letter-spacing:-.035em;margin:0 0 14px}h3{font-size:21px;line-height:1.3;margin:0 0 12px}p{margin:0 0 18px}.muted,small{color:var(--muted)}.max{max-width:850px}.columns{display:grid;grid-template-columns:1fr 1fr;gap:32px}.note{padding:18px 22px;border-left:4px solid var(--green);background:#e6eee7;margin:24px 0}.note strong{display:block}.note.amber{background:#faf0d8;border-color:#ae7726}.note p:last-child{margin:0}code{font-family:var(--mono);font-size:.88em;overflow-wrap:anywhere}p code,li code,td code{background:#e5eae6;padding:1px 4px;border-radius:3px}pre{padding:24px;background:var(--navy);color:#e4f0ee;border-radius:10px;overflow:auto;font:14px/1.65 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere;margin:18px 0}.code-comment{color:#adced0}.table-scroll{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:15px}th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);padding:14px 14px;border-bottom:2px solid #9baead}td{padding:18px 14px;vertical-align:top;border-bottom:1px solid var(--line)}td:first-child{min-width:180px;font-weight:650}.chip{display:inline-block;border:1px solid #c1ccc6;border-radius:30px;padding:2px 10px;font-size:12px;font-weight:700;letter-spacing:.03em}.chain{list-style:none;counter-reset:flow;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:28px 0}.chain li{counter-increment:flow;background:white;border:1px solid var(--line);padding:18px;border-radius:10px;font-size:15px}.chain li:before{content:"0" counter(flow);display:block;font:13px var(--mono);color:var(--green);margin-bottom:14px}.chain strong{display:block;line-height:1.35;margin-bottom:10px}.rule-layout{display:grid;grid-template-columns:1fr 1fr;gap:30px}.rule-result{border-top:1px solid var(--line);padding:18px 0}.rule-result b{font-family:var(--mono);font-size:19px;color:var(--green)}.rule-result:last-child b{color:var(--amber)}.demo{background:#fff;border:1px solid #bccbc7;border-radius:14px;overflow:hidden;margin-top:26px}.demo-top{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:20px 24px;background:#edf2ee;border-bottom:1px solid var(--line)}.demo-top strong{display:block}.demo-top small{font-size:13px}.demo-body{display:grid;grid-template-columns:1fr 1fr;gap:0}.demo-input{padding:28px;border-right:1px solid var(--line)}.demo-output{padding:28px;background:#fbfcfa}.field{margin-bottom:18px}label{display:block;font-weight:600;font-size:14px;margin-bottom:7px}input[type=text],select{width:100%;padding:10px 12px;border:1px solid #9aabaa;border-radius:7px;background:white;color:var(--ink)}fieldset{padding:0;margin:0;border:0;min-width:0}legend{font-size:13px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:6px 0 14px}.check{display:flex;gap:10px;align-items:start;font-weight:400}.check input{margin-top:6px;accent-color:var(--green);width:17px;height:17px;flex-shrink:0}.check code{background:transparent}.controls{display:flex;flex-wrap:wrap;gap:9px}.form-note{font-size:13px;margin-top:12px}.status{font-size:22px;font-weight:750;margin-bottom:14px;line-height:1.3}.status[data-state=approved]{color:var(--green)}.status[data-state=pending]{color:var(--amber)}.status[data-state=denied]{color:var(--red)}#trace{padding-left:21px;font-size:14px;min-height:130px}#trace li{margin-bottom:9px}#decision{border-top:1px solid var(--line);padding-top:18px}#decision .controls{margin-top:14px}#memory{font-size:13px;overflow-wrap:anywhere}#memory li{margin-bottom:8px}.metrics{display:flex;gap:24px;border-top:1px solid var(--line);margin-top:22px;padding-top:16px;font-size:13px}.metrics b{font-size:24px;color:var(--ink);display:block;font-variant-numeric:tabular-nums}.recipe{padding:16px 0;border-top:1px solid var(--line)}.recipe summary{cursor:pointer;font-weight:650}.recipe p{margin:12px 0}.split-case{padding:25px 0;border-top:1px solid var(--line)}.split-case .chip{margin-bottom:15px}.sources{font-size:14px}.sources li{margin-bottom:9px}footer{padding:30px 0;font-size:13px;color:var(--muted)}[hidden]{display:none!important}.skip{position:absolute;top:-70px;left:16px;z-index:20;background:white;padding:12px}.skip:focus{top:8px}
+@media(max-width:800px){.hero{grid-template-columns:1fr;gap:20px;padding:42px 0}.hero-figure{padding-left:20px}.columns,.rule-layout,.demo-body{grid-template-columns:1fr}.chain{grid-template-columns:1fr 1fr}.demo-input{border-right:0;border-bottom:1px solid var(--line)}.nav-inner{align-items:start;gap:12px;flex-direction:column}.nav-links{gap:16px}.demo-top{align-items:start}.wrap{padding:0 20px}main section{padding:40px 0}html{scroll-padding-top:120px}}
+@media(max-width:440px){.chain{grid-template-columns:1fr}.demo-top{flex-direction:column}.demo-input,.demo-output{padding:20px}.controls button{width:100%}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+@media print{nav,.hero .button,.skip,.demo button,.demo fieldset,#decision{display:none!important}body{font-size:11pt;background:white}header{background:white;color:black}.hero .lead,.hero-note,.hero-step small,.eyebrow{color:#333}h1 em{color:#333}.hero{padding:20px 0}.wrap{max-width:none;padding:0}.hero-figure{border-color:#999}.chain,.demo,pre,.note{break-inside:avoid}pre{background:#eee;color:black}.demo-body{grid-template-columns:1fr 1fr}main section{padding:24px 0}a{color:#111}details::details-content{display:block!important;content-visibility:visible!important}footer{padding:15px 0}}
+</style>
+</head>
+<body>
+<a class="skip" href="#casi">Vai ai contenuti</a>
+<nav aria-label="Navigazione principale"><div class="nav-inner"><a class="brand" href="#inizio">AI DAY TORINO / D8</a><div class="nav-links"><a href="#casi">I casi</a><a href="#regole">AutoApprovalRules</a><a href="#prova">Prova tu</a><a href="#piano">Piano e workflow</a><a href="#demo">Sul palco</a></div></div></nav>
+<header id="inizio"><div class="wrap hero"><div><div class="eyebrow">Microsoft Agent Framework · .NET 1.24.0</div><h1>L’agente propone.<br><em>Chi dà il via?</em></h1><p class="lead">Human in the loop significa inserire una decisione umana nel lavoro dell’agente. Con HarnessAgent puoi decidere ogni volta, ricordare un consenso o approvare automaticamente casi precisi.</p><a class="button" href="#prova">Esplora una chiamata →</a><p class="hero-note">Guida offline · verificata il 9 ottobre 2026 · nessuna dipendenza esterna</p></div><div class="hero-figure" aria-label="Il flusso di un tool con approvazione"><div class="hero-step"><span class="step-number">1</span><div><strong>Il modello propone una chiamata</strong><small>Nome del tool + argomenti effettivi.</small></div></div><div class="hero-step"><span class="step-number">2</span><div><strong>L’harness cerca un’autorizzazione</strong><small>Prima i consensi ricordati, poi le regole applicative.</small></div></div><div class="hero-step"><span class="step-number">3</span><div><strong>Se manca, la persona decide</strong><small>L’app mostra la richiesta e raccoglie la risposta.</small></div></div><div class="hero-step"><span class="step-number">4</span><div><strong>Il framework riprende il lavoro</strong><small>Il tool esegue se autorizzato; il risultato torna al modello.</small></div></div></div></div></header>
+<main class="wrap">
+<section id="casi"><div class="section-head"><span class="section-id">01 /</span><h2>Quattro risposte alla stessa proposta</h2></div><p class="max">Immagina questa chiamata: <code>PublishAnnouncement(channel: "evento", message: "Benvenuti!")</code>. Il tool è avvolto in <code>ApprovalRequiredAIFunction</code>: prima di eseguirlo serve un’autorizzazione. La scelta umana può avere una durata diversa.</p>
+<div class="table-scroll"><table><thead><tr><th>Scelta in D8</th><th>Cosa autorizza</th><th>Alla prossima chiamata</th></tr></thead><tbody>
+<tr><td>N · Rifiuta</td><td>Questa chiamata non esegue.</td><td>Una nuova proposta richiede una nuova decisione. Il rifiuto non crea una blacklist permanente.</td></tr>
+<tr><td>S · Una volta</td><td>Solo la chiamata mostrata.</td><td>Chiede ancora, anche con argomenti identici.</td></tr>
+<tr><td>A · Stessi argomenti</td><td>Questa chiamata e quelle identiche nella sessione.</td><td>Stesso tool, stesso canale, stesso testo: passa. Cambia anche un solo argomento: chiede.</td></tr>
+<tr><td>T · Tutto il tool</td><td>Questa chiamata e le successive allo stesso tool nella sessione.</td><td>Passa anche con testo o canale diversi. Il consenso ha una portata più ampia.</td></tr>
+</tbody></table></div>
+<pre><code>AIContent answer = choice switch
+{
+    "s" =&gt; request.CreateResponse(true),
+    "a" =&gt; request.CreateAlwaysApproveToolWithArgumentsResponse(),
+    "t" =&gt; request.CreateAlwaysApproveToolResponse(),
+    _   =&gt; request.CreateResponse(false)
+};
+
+await agent.RunAsync(
+    new ChatMessage(ChatRole.User, [answer]), session);</code></pre>
+<div class="note"><strong>La sessione è la memoria dei consensi.</strong><p>Riutilizza lo stesso <code>AgentSession</code> tra i turni. D8 mantiene questa sessione finché digiti <code>/reset</code> o chiudi la console. <code>CreateResponse</code> lega la decisione alla richiesta originale; il binding dell’harness mantiene nome e argomenti approvati.</p></div>
+<p class="sources">Riferimenti: <a href="https://learn.microsoft.com/en-us/agent-framework/agents/tools/tool-approval">flusso di approvazione</a> · <a href="https://github.com/microsoft/agent-framework/blob/dotnet-1.24.0/dotnet/src/Microsoft.Agents.AI/Harness/ToolApproval/ToolApprovalRequestContentExtensions.cs">risposte “approva sempre” nella 1.24.0</a>.</p>
+</section>
+<section id="regole"><div class="section-head"><span class="section-id">02 /</span><h2>AutoApprovalRules, passo per passo</h2></div><p class="lead">Una regola è una funzione C# scritta dall’applicazione. Risponde a una domanda: <strong>“Posso autorizzare automaticamente questa chiamata?”</strong></p>
+<p class="max">Il modello propone tool e argomenti. Il codice della regola li esamina tramite <code>ToolAutoApprovalRuleContext</code>, che espone anche agente, sessione, messaggi della richiesta e opzioni del run. Il risultato è un <code>ValueTask&lt;bool&gt;</code>; può quindi usare anche una verifica asincrona. In D8 basta un confronto locale.</p>
+<div class="rule-layout"><div><pre><code>private static ValueTask&lt;bool&gt; ApproveDrafts(
+    ToolAutoApprovalRuleContext context)
+{
+    var call = context.FunctionCallContent;
+    bool match =
+        call.Name == "PublishAnnouncement" &amp;&amp;
+        call.Arguments?.TryGetValue(
+            "channel", out var channel) == true &amp;&amp;
+        channel?.ToString() == "bozze";
+
+    return ValueTask.FromResult(match);
+}</code></pre></div><div>
+<div class="rule-result"><b>true → autorizza</b><p>Il tool e il canale corrispondono: l’harness approva senza mostrare un prompt umano e non valuta le regole successive.</p></div>
+<div class="rule-result"><b>false → prosegui</b><p>Questa regola non autorizza. L’harness prova la successiva; se nessuna restituisce <code>true</code>, restituisce la richiesta all’applicazione per far decidere la persona.</p></div>
+</div></div>
+<ol class="chain" aria-label="Ordine delle decisioni"><li><strong>Consenso ricordato?</strong>Se una standing approval corrisponde, la chiamata è già autorizzata.</li><li><strong>Regola 1, 2, 3…</strong>In ordine di registrazione. Si ferma al primo <code>true</code>.</li><li><strong>Nessun consenso?</strong>La richiesta arriva alla UI: approva o rifiuta.</li><li><strong>Ripresa</strong>Il risultato del tool, oppure il rifiuto, torna nel flusso dell’agente.</li></ol>
+<div class="columns"><div><h3>Due regole: è sufficiente un sì</h3><p>Regola 1: “approva il canale bozze”. Regola 2: “approva il testo esatto Benvenuti!”. Per <code>evento / Benvenuti!</code>, la prima restituisce <code>false</code>, la seconda <code>true</code>: il tool esegue.</p><p>Non serve che tutte siano vere. Per richiedere <strong>due condizioni insieme</strong>, uniscile con <code>&amp;&amp;</code> nella stessa regola e considera anche eventuali altre regole e consensi ricordati.</p></div><div><h3>Chi decide la regola?</h3><p>La configuri tu in <code>HarnessAgentOptions.ToolApprovalAgentOptions.AutoApprovalRules</code>. La scelta “ricorda” arriva invece da una risposta umana precedente.</p><p>La regola viene rivalutata sulle nuove chiamate che non hanno già un consenso ricordato. <code>/reset</code> azzera i consensi della sessione; la configurazione <code>--auto</code> resta attiva.</p></div></div>
+<pre><code>DisableToolAutoApproval = false,
+ToolApprovalAgentOptions = new()
+{
+    AutoApprovalRules = [ApproveDrafts],
+    MaxAutoApprovalIterations = 3
+}</code></pre>
+<div class="note amber"><strong>Un limite obbligatorio deve essere applicato prima dell’effetto.</strong><p><code>false</code> non blocca: un’altra regola, un consenso ricordato o una persona possono autorizzare. Se “mai oltre 99 euro” è una policy, il tool o il servizio deve verificarla anche dopo l’approvazione. Inoltre, un consenso “tutto il tool” viene controllato prima di <code>AutoApprovalRules</code>.</p></div>
+<details class="recipe"><summary>Il nome DisableToolAutoApproval può confondere</summary><p><code>false</code> è il default: include <code>ToolApprovalAgent</code>, con gestione dei consensi ricordati, code e regole. Senza regole configurate e senza consensi precedenti, i tool marcati continuano a chiedere.</p><p><code>true</code> rimuove quel middleware. Un tool avvolto in <code>ApprovalRequiredAIFunction</code> mantiene il requisito di approvazione. In D8 lasciamo <code>false</code> e usiamo <code>--auto</code> solo per aggiungere la callback.</p></details>
+<details class="recipe"><summary>Ci sono più richieste o troppe continuazioni automatiche?</summary><p>L’harness gestisce una coda per raccogliere le decisioni sulle richieste. L’applicazione deve continuare a controllare le richieste di approvazione dopo ogni run. <code>MaxAutoApprovalIterations</code> limita le reinvocazioni automatiche nello stesso run: al limite, eventuali richieste ancora da approvare tornano alla persona. D8 limita separatamente anche i passaggi manuali.</p></details>
+<p class="sources">Riferimenti: <a href="https://github.com/microsoft/agent-framework/blob/dotnet-1.24.0/dotnet/src/Microsoft.Agents.AI/Harness/ToolApproval/ToolApprovalAgentOptions.cs">contratto di AutoApprovalRules</a> · <a href="https://github.com/microsoft/agent-framework/blob/dotnet-1.24.0/dotnet/src/Microsoft.Agents.AI/Harness/ToolApproval/ToolApprovalAgent.cs">ordine di valutazione e stato della sessione</a>.</p>
+</section>
+<section id="prova"><div class="section-head"><span class="section-id">03 /</span><h2>Segui una chiamata</h2></div><p class="max">Cambia canale e testo, proponi la chiamata e osserva il percorso. Poi ripeti, ricordando un consenso o abilitando una regola. Questo è un <strong>simulatore didattico nel browser</strong>: nessun modello, nessun tool MAF reale, nessuna pubblicazione. D8 esegue invece il framework e il modello configurato.</p>
+<noscript><div class="note amber">Per il simulatore abilita JavaScript. Tutte le spiegazioni e il codice restano leggibili senza JavaScript.</div></noscript>
+<div class="demo"><div class="demo-top"><div><strong>PublishAnnouncement</strong><small>Tool marcato con ApprovalRequiredAIFunction</small></div><button id="reset" type="button">Nuova sessione</button></div>
+<div class="demo-body"><div class="demo-input"><form id="call-form"><fieldset id="call-fields"><legend>La proposta del modello</legend><div class="field"><label for="channel">Canale</label><select id="channel"><option value="evento">evento</option><option value="bozze">bozze</option></select></div><div class="field"><label for="message">Testo esatto</label><input id="message" type="text" required maxlength="240" value="Benvenuti!"></div><legend>Regole dell’applicazione, in ordine</legend><label class="check"><input type="checkbox" id="rule-drafts"><span><strong>Regola 1 · SoloBozze</strong><br>Approva se <code>channel == "bozze"</code>. È la regola di D8 con <code>--auto</code>.</span></label><label class="check"><input type="checkbox" id="rule-welcome"><span><strong>Regola 2 · SoloBenvenuti</strong><br>Approva se <code>message == "Benvenuti!"</code>. Solo in questo simulatore, per capire il primo <code>true</code>.</span></label><button class="primary" id="propose" type="submit">Proponi chiamata →</button></fieldset></form><p class="form-note">Durante una decisione i dati sono fermi: approvi la proposta visualizzata.</p><h3 style="font-size:16px;margin-top:26px">Consensi ricordati nella sessione</h3><ul id="memory"><li>Nessuno.</li></ul></div>
+<div class="demo-output"><div role="status" aria-live="polite" aria-atomic="true"><div id="status" class="status" data-state="idle">Pronto per una proposta</div><p id="outcome" class="muted">Parti senza regole: la prima chiamata arriverà alla persona.</p></div><ol id="trace" aria-label="Passaggi della chiamata"></ol><div id="decision" hidden><strong>La persona decide su questa proposta</strong><pre id="pending-call"></pre><div class="controls"><button type="button" class="danger" data-decision="deny">N · Rifiuta</button><button type="button" data-decision="once">S · Una volta</button><button type="button" data-decision="args">A · Stessi argomenti</button><button type="button" data-decision="tool">T · Tutto il tool</button></div></div><div class="metrics"><span><b id="calls-count">0</b>proposte</span><span><b id="runs-count">0</b>esecuzioni simulate</span><span><b id="session-count">1</b>sessione</span></div></div></div></div>
+<details class="recipe"><summary>Prova 1 · Quanto dura “una volta”?</summary><p>Lascia le regole spente. Proponi → <strong>S</strong> → proponi ancora. Chiede di nuovo. Scegli <strong>N</strong>: il contatore delle esecuzioni resta fermo.</p></details>
+<details class="recipe"><summary>Prova 2 · Cosa significa “stessi argomenti”?</summary><p>Nuova sessione, regole spente. Proponi → <strong>A</strong> → riproponi senza modifiche: esegue. Cambia il testo: chiede. Vale lo stesso se cambi soltanto il canale.</p></details>
+<details class="recipe"><summary>Prova 3 · Una regola false non è un rifiuto</summary><p>Nuova sessione. Attiva solo <strong>SoloBozze</strong>, seleziona <strong>evento</strong> e proponi. La regola restituisce false e puoi ancora approvare con S. Con <strong>bozze</strong>, la stessa regola approva automaticamente.</p></details>
+<details class="recipe"><summary>Prova 4 · La seconda regola può dare il via</summary><p>Nuova sessione. Attiva entrambe le regole, scegli <strong>evento</strong> e testo <strong>Benvenuti!</strong>. Osserva: SoloBozze → false; SoloBenvenuti → true; esecuzione senza domanda.</p></details>
+<details class="recipe"><summary>Prova 5 · Un consenso ricordato precede le regole</summary><p>Nuova sessione, regole spente. Proponi → <strong>T</strong>. Attiva SoloBozze e riproponi sul canale evento con un testo diverso. La memoria autorizza prima della callback: SoloBozze non viene valutata.</p></details>
+</section>
+<section id="piano"><div class="section-head"><span class="section-id">04 /</span><h2>HITL comprende anche il dialogo</h2></div><div class="columns"><article class="split-case"><span class="chip">HARNESS · PLAN / EXECUTE</span><h3>Chiarire, rivedere, approvare un piano</h3><p>Con <code>AgentModeProvider</code>, la modalità <code>plan</code> guida l’agente a raccogliere requisiti e proporre il lavoro. La persona può rispondere “usa il canale interno” o “cambia il secondo passo”. L’app può passare a <code>execute</code> con <code>SetModeAsync</code>.</p><p>La conferma del cambio modalità è un comportamento guidato dalle istruzioni. I tool di modalità e todo non richiedono di per sé approvazione. Gli effetti che devono avere un consenso esplicito vanno protetti sul tool.</p><p>Il sample <code>PlanningOutputObserver</code> usa JSON strutturato per distinguere <code>Clarification</code> e <code>Approval</code>, poi presenta domande e scelte. È codice di interfaccia del sample da integrare, non una UI fornita automaticamente dal costruttore dell’harness.</p><p class="sources"><a href="https://learn.microsoft.com/en-us/agent-framework/agents/planning-and-todos">Planning e todo</a> · <a href="https://github.com/microsoft/agent-framework/blob/dotnet-1.24.0/dotnet/samples/02-agents/Harness/Harness_Shared_Console/Observers/PlanningOutputObserver.cs">PlanningOutputObserver</a></p></article>
+<article class="split-case"><span class="chip">WORKFLOWS · RICHIESTA / RISPOSTA</span><h3>Fermarsi per ricevere un dato o una revisione</h3><p>Un workflow può inviare una richiesta tipizzata tramite <code>RequestPort</code>. L’app riceve un <code>RequestInfoEvent</code>, mostra il contenuto alla persona e restituisce la risposta con <code>SendResponseAsync</code>.</p><p>La risposta può essere un’approvazione, una scelta, un numero o un testo corretto. Il workflow riprende il percorso previsto. I checkpoint permettono di conservare lo stato per la ripresa.</p><p>È adatto a più passaggi di revisione o attese esterne. La raccolta dell’input e la persistenza vanno collegate all’applicazione. Nelle orchestrazioni, anche l’approvazione di un tool può essere veicolata da questo meccanismo.</p><p class="sources"><a href="https://learn.microsoft.com/en-us/agent-framework/workflows/human-in-the-loop">HITL nei workflow</a></p></article></div>
+<div class="note"><strong>Scegli il punto della decisione.</strong><p>Per autorizzare una chiamata usa l’approvazione tool. Per definire cosa fare usa il dialogo di pianificazione. Per raccogliere una risposta in una sequenza di lavoro usa una richiesta del workflow. D8 si concentra sulle approvazioni tool dell’harness.</p></div>
+</section>
+<section id="demo"><div class="section-head"><span class="section-id">05 /</span><h2>La sequenza per il palco</h2></div><p>Dalla cartella <code>MAF.Live</code>, dopo restore e build, apri <a href="Program.cs">Program.cs</a>. Il modello è reale, tutte le pubblicazioni restano simulate in console.</p><div class="columns"><div><h3>Due minuti · consenso e memoria</h3><pre><code>dotnet run --project D8.HumanInTheLoop --no-build</code></pre><ol><li>Incolla <strong>Pubblica sul canale evento il testo esatto: Benvenuti ad AI Day Torino!</strong></li><li>Rispondi <strong>n</strong>: zero pubblicazioni.</li><li>Ripeti il prompt, rispondi <strong>a</strong>: esegue e ricorda.</li><li>Ripeti ancora lo stesso prompt: esegue senza chiedere.</li><li>Cambia il testo in <strong>A domani!</strong>: chiede di nuovo.</li></ol></div><div><h3>Un minuto in più · la regola</h3><pre><code>dotnet run --project D8.HumanInTheLoop --no-build -- --auto</code></pre><ol><li>Incolla <strong>Pubblica sul canale bozze il testo esatto: Prova microfono.</strong></li><li>La console mostra <strong>SoloBozze = True</strong>: il tool esegue.</li><li>Ripeti con canale <strong>evento</strong>.</li><li>Mostra <strong>SoloBozze = False</strong>, poi approva con <strong>s</strong>: false non impediva l’esecuzione.</li></ol></div></div><p><code>/reset</code> apre una sessione nuova; <code>/esci</code> chiude. Invio o una scelta diversa da s/a/t rifiutano la chiamata. La console espone gli argomenti effettivi: per riusare il consenso A devono coincidere tutti, anche se il prompt in linguaggio naturale è simile.</p></section>
+<footer>AI Day Torino · 10 ottobre 2026 · <a href="README.md">Guida D8</a> · <a href="https://www.nuget.org/packages/Microsoft.Agents.AI.Harness/1.24.0">Versione 1.24.0</a><br>Questa pagina funziona offline. I riferimenti esterni richiedono una connessione. Il simulatore conserva i consensi solo in memoria fino al reset o alla ricarica.</footer>
+</main>
+<script>
+(() => {
+  'use strict';
+  const byId = id => document.getElementById(id);
+  const form = byId('call-form'), fields = byId('call-fields'), trace = byId('trace');
+  let remembered = [], pending = null, calls = 0, runs = 0, session = 1;
+  const same = (a, b) => a.name === b.name && a.channel === b.channel && a.message === b.message;
+  function step(text) { const li = document.createElement('li'); li.textContent = text; trace.append(li); }
+  function status(state, title, detail) {
+    byId('status').dataset.state = state; byId('status').textContent = title; byId('outcome').textContent = detail;
+  }
+  function refresh() {
+    byId('calls-count').textContent = calls; byId('runs-count').textContent = runs; byId('session-count').textContent = session;
+    byId('decision').hidden = !pending; fields.disabled = Boolean(pending);
+    const memory = byId('memory'); memory.replaceChildren();
+    const texts = remembered.map(rule => rule.kind === 'tool'
+      ? 'PublishAnnouncement: tutti gli argomenti (scelta T).'
+      : 'PublishAnnouncement: ' + JSON.stringify({ channel: rule.call.channel, message: rule.call.message }) + ' (scelta A).');
+    for (const text of texts.length ? texts : ['Nessuno.']) {
+      const li = document.createElement('li'); li.textContent = text; memory.append(li);
+    }
+  }
+  function execute(call, reason) {
+    runs++; pending = null;
+    step('Tool eseguito nella simulazione. Il risultato tornerebbe al modello.');
+    status('approved', 'Autorizzato → eseguito', reason + ' Canale: ' + call.channel + '. Testo: ' + call.message);
+    refresh();
+  }
+  form.addEventListener('submit', event => {
+    event.preventDefault();
+    if (pending || !form.reportValidity()) return;
+    const call = { name: 'PublishAnnouncement', channel: byId('channel').value, message: byId('message').value };
+    calls++; trace.replaceChildren();
+    step('Il modello propone PublishAnnouncement. Il wrapper richiede un’autorizzazione.');
+    const rule = remembered.find(item => item.kind === 'tool' || same(item.call, call));
+    if (rule) {
+      step('Consenso ricordato trovato: ' + (rule.kind === 'tool' ? 'tutto il tool.' : 'tutti gli argomenti coincidono.'));
+      step('AutoApprovalRules non valutate: la memoria ha già autorizzato.');
+      execute(call, 'Autorizzazione ricordata nella sessione.'); return;
+    }
+    step('Nessun consenso ricordato corrisponde.');
+    const rules = [];
+    if (byId('rule-drafts').checked) rules.push(['SoloBozze', call.channel === 'bozze']);
+    if (byId('rule-welcome').checked) rules.push(['SoloBenvenuti', call.message === 'Benvenuti!']);
+    if (!rules.length) step('AutoApprovalRules: nessuna callback configurata.');
+    for (const [name, match] of rules) {
+      step(name + ' → ' + match + (match ? ': autorizza, le regole successive non vengono valutate.' : ': non autorizza; passa alla successiva.'));
+      if (match) { execute(call, 'Approvazione automatica della regola ' + name + '.'); return; }
+    }
+    pending = Object.freeze(call);
+    step('Serve la persona: la chiamata resta in attesa.');
+    byId('pending-call').textContent = call.name + '(' + JSON.stringify({ channel: call.channel, message: call.message }, null, 2) + ')';
+    status('pending', 'In attesa della persona', 'Nessuna esecuzione. Puoi approvare questa proposta, ricordarla o rifiutarla.');
+    refresh();
+  });
+  for (const button of document.querySelectorAll('[data-decision]')) button.addEventListener('click', () => {
+    if (!pending) return;
+    const call = pending, choice = button.dataset.decision;
+    if (choice === 'deny') {
+      pending = null; step('La persona rifiuta: tool non eseguito.');
+      status('denied', 'Rifiutato → nessun effetto', 'La decisione riguarda questa chiamata. Una nuova proposta sarà valutata di nuovo.');
+      refresh();
+    } else {
+      if (choice === 'args') remembered.push({ kind: 'args', call: { ...call } });
+      if (choice === 'tool') remembered.push({ kind: 'tool' });
+      step('La persona approva' + (choice === 'once' ? ' solo questa chiamata.' : choice === 'args' ? ' e ricorda tutti gli argomenti.' : ' e ricorda tutto il tool, anche con argomenti diversi.'));
+      execute(call, 'Decisione umana sulla proposta originale.');
+    }
+    byId('propose').focus();
+  });
+  byId('reset').addEventListener('click', () => {
+    remembered = []; pending = null; calls = 0; runs = 0; session++; trace.replaceChildren();
+    status('idle', 'Nuova sessione', 'Consensi e contatori azzerati. Le regole applicative selezionate restano configurate, come --auto dopo /reset in D8.');
+    refresh();
+  });
+  refresh();
+})();
+</script>
+</body>
+</html>

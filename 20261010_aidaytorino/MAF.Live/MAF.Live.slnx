@@ -1,0 +1,13 @@
+<Solution>
+  <Project Path="D1.ObservableAgent/D1.ObservableAgent.csproj" />
+  <Project Path="D2.Harness/D2.Harness.csproj" />
+  <Project Path="D3.HumanApproval/D3.HumanApproval.csproj" />
+  <Project Path="D4.MiddlewarePoisoning/D4.MiddlewarePoisoning.csproj" />
+  <Project Path="D5.Evaluation/D5.Evaluation.csproj" />
+  <Project Path="D6.MiddlewareStack/D6.MiddlewareStack.csproj" />
+  <Project Path="D7.WordPoisoning/D7.WordPoisoning.csproj" />
+  <Project Path="D8.HumanInTheLoop/D8.HumanInTheLoop.csproj" />
+  <Folder Name="/Tests/">
+    <Project Path="Demo.Tests/Demo.Tests.csproj" />
+  </Folder>
+</Solution>

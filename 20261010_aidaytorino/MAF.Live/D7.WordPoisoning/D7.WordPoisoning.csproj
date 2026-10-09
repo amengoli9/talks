@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType></PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Agents.AI.OpenAI" />
+    <PackageReference Include="DocumentFormat.OpenXml" />
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
+    <None Update="relazione_demo.docx" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

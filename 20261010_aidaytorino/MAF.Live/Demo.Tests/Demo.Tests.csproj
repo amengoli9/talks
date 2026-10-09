@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><IsTestProject>true</IsTestProject><IsPackable>false</IsPackable></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../Common/ModelSettings.cs" Link="Common/ModelSettings.cs" />
+    <ProjectReference Include="../D2.Harness/D2.Harness.csproj" />
+    <ProjectReference Include="../D3.HumanApproval/D3.HumanApproval.csproj" />
+    <ProjectReference Include="../D4.MiddlewarePoisoning/D4.MiddlewarePoisoning.csproj" />
+    <ProjectReference Include="../D6.MiddlewareStack/D6.MiddlewareStack.csproj" />
+    <ProjectReference Include="../D7.WordPoisoning/D7.WordPoisoning.csproj" />
+    <ProjectReference Include="../D8.HumanInTheLoop/D8.HumanInTheLoop.csproj" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" PrivateAssets="all" />
+  </ItemGroup>
+</Project>
