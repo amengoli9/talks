@@ -1,0 +1,13 @@
+[
+  {
+    "Name": "Third parties: Full restaurant",
+    "Projects": [
+      { "Path": "Orders.Api\\Orders.Api.csproj", "Action": "Start" },
+      { "Path": "Kitchen.Worker\\Kitchen.Worker.csproj", "Action": "Start" },
+      { "Path": "Inventory.Api\\Inventory.Api.csproj", "Action": "Start" },
+      { "Path": "Supplier.Api\\Supplier.Api.csproj", "Action": "Start" },
+      { "Path": "Payments.Api\\Payments.Api.csproj", "Action": "Start" },
+      { "Path": "Notifications.Worker\\Notifications.Worker.csproj", "Action": "Start" }
+    ]
+  }
+]

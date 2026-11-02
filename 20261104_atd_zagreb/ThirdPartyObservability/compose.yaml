@@ -1,0 +1,209 @@
+name: zagreb-third-party-demo
+
+x-app-environment: &app-environment
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://collector:4317
+  ConnectionStrings__Postgres: Host=postgres;Database=restaurant;Username=demo;Password=demo
+  ConnectionStrings__Redis: redis:6379,abortConnect=false,asyncTimeout=2000
+  RabbitMQ__Uri: amqp://demo:demo@rabbitmq:5672/
+  Inventory__BaseUrl: http://inventory:8080
+  Supplier__BaseUrl: http://supplier:8080
+  Payments__BaseUrl: http://payments:8080
+
+services:
+  dashboard:
+    image: mcr.microsoft.com/dotnet/aspire-dashboard:13.1
+    ports:
+      - "127.0.0.1:18898:18888"
+    environment:
+      ASPIRE_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS: "true"
+
+  collector:
+    image: otel/opentelemetry-collector-contrib:0.123.0
+    environment:
+      OTEL_DEBUG_VERBOSITY: ${OTEL_DEBUG_VERBOSITY:-basic}
+    ports:
+      - "127.0.0.1:4327:4317"
+    volumes:
+      - ./observability/collector.yaml:/etc/otelcol-contrib/config.yaml:ro
+    depends_on:
+      - dashboard
+
+  prometheus:
+    image: prom/prometheus:v3.2.1
+    ports:
+      - "127.0.0.1:19090:9090"
+    volumes:
+      - ./observability/prometheus.yaml:/etc/prometheus/prometheus.yml:ro
+      - ./observability/alerts.yaml:/etc/prometheus/alerts.yaml:ro
+      - prometheus-data:/prometheus
+
+  grafana:
+    image: grafana/grafana:11.6.0
+    ports:
+      - "127.0.0.1:13000:3000"
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_AUTH_DISABLE_LOGIN_FORM: "true"
+    volumes:
+      - ./observability/grafana/datasources.yaml:/etc/grafana/provisioning/datasources/default.yaml:ro
+      - ./observability/grafana/dashboards.yaml:/etc/grafana/provisioning/dashboards/default.yaml:ro
+      - ./observability/grafana/restaurant.json:/var/lib/grafana/dashboards/restaurant.json:ro
+    depends_on:
+      - prometheus
+
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.69.0
+    environment:
+      REDIS_ADDR: redis://redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.17.1
+    environment:
+      DATA_SOURCE_NAME: postgresql://demo:demo@postgres:5432/restaurant?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:17.6-alpine
+    environment:
+      POSTGRES_DB: restaurant
+      POSTGRES_USER: demo
+      POSTGRES_PASSWORD: demo
+    ports:
+      - "127.0.0.1:15432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U demo -d restaurant"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  redis:
+    image: redis:7.4.5-alpine
+    ports:
+      - "127.0.0.1:56379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  rabbitmq:
+    image: rabbitmq:4.1.4-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: demo
+      RABBITMQ_DEFAULT_PASS: demo
+    ports:
+      - "127.0.0.1:5673:5672"
+      - "127.0.0.1:15673:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+      - ./observability/enabled_plugins:/etc/rabbitmq/enabled_plugins:ro
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 10s
+      retries: 30
+
+  orders:
+    build:
+      context: .
+      args:
+        PROJECT: Orders.Api
+    ports:
+      - "127.0.0.1:5280:8080"
+    environment:
+      <<: *app-environment
+      ASPNETCORE_URLS: http://+:8080
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      dashboard:
+        condition: service_started
+
+  kitchen:
+    build:
+      context: .
+      args:
+        PROJECT: Kitchen.Worker
+    environment: *app-environment
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      dashboard:
+        condition: service_started
+      inventory:
+        condition: service_started
+      payments:
+        condition: service_started
+
+  inventory:
+    build:
+      context: .
+      args:
+        PROJECT: Inventory.Api
+    ports:
+      - "127.0.0.1:5281:8080"
+    environment:
+      <<: *app-environment
+      ASPNETCORE_URLS: http://+:8080
+    depends_on:
+      - supplier
+      - collector
+
+  supplier:
+    build:
+      context: .
+      args:
+        PROJECT: Supplier.Api
+    ports:
+      - "127.0.0.1:5282:8080"
+    environment:
+      <<: *app-environment
+      ASPNETCORE_URLS: http://+:8080
+    depends_on:
+      - collector
+
+  payments:
+    build:
+      context: .
+      args:
+        PROJECT: Payments.Api
+    ports:
+      - "127.0.0.1:5283:8080"
+    environment:
+      <<: *app-environment
+      ASPNETCORE_URLS: http://+:8080
+    depends_on:
+      - collector
+
+  notifications:
+    build:
+      context: .
+      args:
+        PROJECT: Notifications.Worker
+    environment: *app-environment
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      collector:
+        condition: service_started
+
+volumes:
+  postgres-data:
+  rabbitmq-data:
+  prometheus-data:

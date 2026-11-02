@@ -1,0 +1,75 @@
+@orders = http://localhost:5270
+@kitchen = http://localhost:5271
+@notifications = http://localhost:5272
+
+### Eccezione reale nella nuova API: il prossimo ordine restituisce 502 con span in errore
+POST {{notifications}}/demo/error
+
+### Timeout nella nuova API: il prossimo ordine restituisce 504
+POST {{notifications}}/demo/slow
+
+### Ripristino notifiche
+POST {{notifications}}/demo/normal
+
+### Nuova API: notifica demo (registrata nei log, senza email o SMS)
+POST {{notifications}}/notifications
+Content-Type: application/json
+
+{ "dish": "margherita" }
+
+### Menu cliente: aprire http://localhost:5270/ oppure /?demo=1 per il relatore
+GET {{orders}}/menu
+
+### 1. Servizio normale
+POST {{orders}}/demo/normal
+
+### Conferma rapida: il piatto non viene cucinato durante questa richiesta
+POST {{orders}}/orders
+Content-Type: application/json
+
+{ "dish": "margherita" }
+
+### 2. Fai scadere la cache e rallenta il gestionale (controllo relatore)
+POST {{orders}}/demo/slow
+
+### Stesso ordine, circa 10 secondi, ancora HTTP 200
+POST {{orders}}/orders
+Content-Type: application/json
+
+{ "dish": "margherita" }
+
+### 3. Dopo l'ordine lento, abilita il refresh prima della scadenza
+POST {{orders}}/demo/proactive
+
+### Rapido anche mentre il gestionale lavora in background. Ripeti dopo 22 secondi.
+POST {{orders}}/orders
+Content-Type: application/json
+
+{ "dish": "risotto" }
+
+### Rifiuto commerciale: HTTP 409, non un guasto della cucina
+POST {{orders}}/orders
+Content-Type: application/json
+
+{ "dish": "tiramisu" }
+
+### Errore DB reale e ripetibile: nome cannoli oltre 32 caratteri, HTTP 502
+POST {{orders}}/orders
+Content-Type: application/json
+
+{ "dish": "cannoli" }
+
+### Modalita intermittente: attivala una volta, poi ripeti gli ordini
+POST {{orders}}/demo/intermittent
+
+### 50% rapido, 25% lento (entro 5 s), 25% errore HTTP 502
+POST {{orders}}/orders
+Content-Type: application/json
+
+{ "dish": "margherita" }
+
+### Diagnostica del relatore: conteggio dei reload e scadenza corrente
+GET {{kitchen}}/demo/state
+
+### Ripristino per la prossima prova
+POST {{orders}}/demo/normal

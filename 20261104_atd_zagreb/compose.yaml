@@ -1,0 +1,10 @@
+name: zagreb-otel-demo
+services:
+  dashboard:
+    image: mcr.microsoft.com/dotnet/aspire-dashboard:13.1
+    ports:
+      - "127.0.0.1:18888:18888"
+      - "127.0.0.1:4317:18889"
+    environment:
+      # Local talk demo: no login. Both published ports are loopback-only.
+      ASPIRE_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS: "true"

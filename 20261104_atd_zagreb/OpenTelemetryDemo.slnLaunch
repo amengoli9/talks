@@ -1,0 +1,19 @@
+[
+  {
+    "Name": "Restaurant: Orders + Kitchen + Notifications",
+    "Projects": [
+      {
+        "Path": "Notifications.Api\\Notifications.Api.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "Kitchen.Api\\Kitchen.Api.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "Orders.Api\\Orders.Api.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

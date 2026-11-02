@@ -1,0 +1,38 @@
+groups:
+  - name: restaurant
+    rules:
+      - alert: MetricsTargetDown
+        expr: up == 0
+        for: 20s
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Prometheus cannot scrape {{ $labels.job }}'
+      - alert: RedisUnavailable
+        expr: redis_up == 0
+        for: 10s
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Redis is unavailable; order lookups use PostgreSQL'
+      - alert: PostgresUnavailable
+        expr: pg_up == 0
+        for: 10s
+        labels:
+          severity: critical
+        annotations:
+          summary: 'PostgreSQL is unavailable'
+      - alert: OrderBacklog
+        expr: rabbitmq_queue_messages_ready{queue="restaurant.orders"} > 5
+        for: 15s
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Orders are waiting for kitchen processing'
+      - alert: DeadLetterMessages
+        expr: rabbitmq_queue_messages_ready{queue=~".*[.]failed"} > 0
+        for: 10s
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Inspect dead-letter queue {{ $labels.queue }}'

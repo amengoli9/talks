@@ -1,0 +1,240 @@
+@page "/"
+@implements IDisposable
+@inject IHttpClientFactory Clients
+
+<main inert="@(_result is not null)">
+    <div class="flag-string" aria-hidden="true">
+        @for (var flag = 0; flag < 18; flag++)
+        {
+            <span class="italian-flag"></span>
+        }
+    </div>
+    <header>
+        <span class="italian-flag welcome-flag" aria-hidden="true"></span>
+        <a class="brand" href="/" aria-label="Al Tavolo, menu"><span class="brand-name" lang="it">al tavolo</span><span class="brand-caption">ITALIAN KITCHEN · BIG ON FLAVOUR</span></a>
+        <span class="italian-flag welcome-flag" aria-hidden="true"></span>
+        <span class="table">Your table <strong>07</strong></span>
+    </header>
+
+    <section aria-labelledby="menu-title">
+        <div class="intro">
+            <div class="intro-copy">
+                <p class="eyebrow"><span class="italian-flag" aria-hidden="true"></span> FROM ITALY, WITH LOVE <span class="italian-flag" aria-hidden="true"></span></p>
+                <h1 id="menu-title">A LOT of Italy.<br /><em>At your table!</em></h1>
+                <p>Nine Italian favourites. Simple ingredients, generous flavour.<br />Choose a dish and our kitchen will confirm your order.</p>
+            </div>
+            <div class="menu-seal" aria-hidden="true"><span class="italian-flag"></span><span>THE ITALIAN</span><strong lang="it">Buon<br />appetito!</strong><span>WAY OF LIFE</span></div>
+        </div>
+        <div class="menu-heading"><h2><span class="italian-flag" aria-hidden="true"></span> Our menu <span class="italian-flag" aria-hidden="true"></span></h2><span>From the first bite to the last spoonful</span></div>
+        <div id="order-status" class="order-status @OrderState" role="status" aria-live="polite" aria-atomic="true">
+            <span class="status-icon" aria-hidden="true">@(OrderState switch { "error" => "!", "slow" => "◷", "pending" => "◷", "success" => "✓", _ => "i" })</span>
+            <div>
+                <strong>@OrderHeading</strong>
+                <span>@OrderMessage</span>
+            </div>
+            @if (_pendingDish is not null || _lastResult is not null)
+            {
+                <span class="status-time" aria-hidden="true">@((_pendingDish is not null ? _elapsed : _lastResult!.Elapsed).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)) s</span>
+            }
+        </div>
+        <div id="menu" class="menu" aria-busy="@_busy.ToString().ToLowerInvariant()">
+            @foreach (var dish in Menu.Items)
+            {
+                <article class="dish @(_pendingDish == dish.Id ? "ordering " + OrderState : "")" @key="dish.Id">
+                    <div class="dish-top">
+                        <span class="dish-number">@((Array.IndexOf(Menu.Items, dish) + 1).ToString("00"))</span>
+                        <span class="price">@dish.Price.ToString("0") €</span>
+                    </div>
+                    <span class="dish-region"><span class="italian-flag" aria-hidden="true"></span> @dish.Region</span>
+                    <h3 lang="it">@dish.Name</h3>
+                    <p>@dish.Description</p>
+                    <button @ref="_orderButtons[dish.Id]" disabled="@_busy" aria-label="@($"Order {dish.Name}")"
+                            @onclick="() => OrderAsync(dish)">@(_pendingDish == dish.Id ? IsSlow ? "Taking longer…" : "Sending…" : "Order this dish")<span class="italian-flag" aria-hidden="true"></span></button>
+                </article>
+            }
+        </div>
+    </section>
+
+    @if (IsDemo)
+    {
+        <section class="presenter" aria-label="Demo controls">
+            <div class="presenter-heading">
+                <span class="eyebrow">DEMO · PRESENTER VIEW</span>
+                <a href="http://localhost:18888" target="_blank" rel="noopener">Open telemetry ↗</a>
+            </div>
+            <div class="scenarios" role="group" aria-label="Scenario">
+                @foreach (var scenario in Scenarios)
+                {
+                    <button disabled="@_busy" aria-pressed="@((_scenario == scenario.Id).ToString().ToLowerInvariant())"
+                            @onclick="() => SetScenarioAsync(scenario.Id)">@scenario.Label</button>
+                }
+            </div>
+            <p id="demo-status" role="status">@_demoStatus</p>
+            <p id="last-request">@_lastRequest</p>
+        </section>
+    }
+
+    <footer><span lang="it">Al Tavolo</span><p>Italian at heart. Made to be enjoyed.</p>
+        <div class="flag-string" aria-hidden="true">
+            @for (var flag = 0; flag < 18; flag++)
+            {
+                <span class="italian-flag"></span>
+            }
+        </div>
+    </footer>
+</main>
+
+@if (_result is { } result)
+{
+    <div class="modal-backdrop">
+        <section class="confirmation" role="dialog" aria-modal="true" aria-labelledby="confirmation-title"
+                 aria-describedby="confirmation-message" data-kind="@(result.Success ? "success" : "error")" @onkeydown="HandleModalKeyAsync">
+            <div class="confirmation-flags" aria-hidden="true"><span class="italian-flag"></span><span class="italian-flag"></span><span class="italian-flag"></span></div>
+            <span class="confirmation-icon" aria-hidden="true">@(result.Success ? "✓" : "!")</span>
+            <p class="result-label">@(result.Success ? "ORDER CONFIRMED" : "ORDER FAILED")</p>
+            <h2 id="confirmation-title">@result.Title</h2>
+            <p id="confirmation-message">@result.Message</p>
+            <p class="confirmation-time @(result.Elapsed >= SlowThresholdSeconds ? "slow" : "")">@(result.Elapsed >= SlowThresholdSeconds ? "Slow response · " : "Time elapsed · ")@result.Elapsed.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture) s</p>
+            <button @ref="_closeButton" @onclick="CloseResultAsync">Got it</button>
+        </section>
+    </div>
+}
+
+@code {
+    [SupplyParameterFromQuery(Name = "demo")]
+    public string? Demo { get; set; }
+    private bool IsDemo => Demo == "1";
+    private static readonly (string Id, string Label)[] Scenarios =
+    [
+        ("normal", "1. Normal service"),
+        ("slow", "2. Simulate slowdown"),
+        ("proactive", "3. Apply fix"),
+        ("intermittent", "4. Intermittent service")
+    ];
+    private readonly CancellationTokenSource _lifetime = new();
+    private readonly Dictionary<string, ElementReference> _orderButtons = new();
+    private bool _busy, _focusResult;
+    private string? _pendingDish, _scenario, _lastDish;
+    private double _elapsed;
+    private const double SlowThresholdSeconds = 2;
+    private bool IsSlow => _pendingDish is not null && _elapsed >= SlowThresholdSeconds;
+    private Confirmation? _lastResult;
+    private string OrderState => _pendingDish is not null ? IsSlow ? "slow" : "pending"
+        : _lastResult is { Success: false } ? "error"
+        : _lastResult is { } result ? result.Elapsed >= SlowThresholdSeconds ? "slow" : "success" : "idle";
+    private string OrderHeading => _pendingDish is not null
+        ? IsSlow ? "This is taking longer than usual" : "Sending your order to the kitchen"
+        : _lastResult is { Success: false } failed ? failed.Title
+        : _lastResult is { } result ? result.Elapsed >= SlowThresholdSeconds ? "Order confirmed · slow response" : "Order confirmed"
+        : "Ready to order?";
+    private string OrderMessage => _pendingDish is not null
+        ? $"{Menu.Find(_pendingDish)?.Name} · {(IsSlow ? "Still waiting for confirmation. Please keep this page open; do not order again." : "Waiting for confirmation. Please keep this page open.")}"
+        : _lastResult?.Message ?? "Choose a dish. Your confirmation will appear here.";
+    private string _demoStatus = "Choose a scenario, then order from the menu.";
+    private string _lastRequest = "Last request: —";
+    private Confirmation? _result;
+    private ElementReference _closeButton;
+
+    private async Task OrderAsync(MenuItem dish)
+    {
+        if (_busy) return;
+        _busy = true;
+        _pendingDish = _lastDish = dish.Id;
+        _elapsed = 0;
+        _lastResult = null;
+        var timer = System.Diagnostics.Stopwatch.StartNew();
+        using var tickerCancellation = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token);
+        var ticker = UpdateElapsedAsync(timer, tickerCancellation.Token);
+        try
+        {
+            // Blazor Server invokes the same real HTTP endpoint as requests.http.
+            using var client = Clients.CreateClient("orders");
+            using var response = await client.PostAsJsonAsync("/orders", new OrderRequest(dish.Id), _lifetime.Token);
+            var reply = await response.Content.ReadFromJsonAsync<ApiReply>(_lifetime.Token);
+            var success = response.IsSuccessStatusCode;
+            var title = success ? "Order confirmed" : reply?.KitchenAccepted == true ? "Order accepted · notification failed"
+                : response.StatusCode == System.Net.HttpStatusCode.Conflict ? "Dish sold out" : "Order not confirmed";
+            _result = new(title, reply?.Message ?? "We couldn't confirm your order. Please ask your waiter.", timer.Elapsed.TotalSeconds, success);
+            _lastRequest = $"HTTP {(int)response.StatusCode} · {timer.Elapsed.TotalSeconds:0.00} s · traceId: {reply?.TraceId ?? "—"}";
+        }
+        catch (OperationCanceledException) when (_lifetime.IsCancellationRequested) { }
+        catch (Exception exception) when (exception is HttpRequestException or OperationCanceledException or System.Text.Json.JsonException)
+        {
+            _result = new("No confirmation received", "We couldn't reach the restaurant. Please ask your waiter whether your order arrived before trying again.", timer.Elapsed.TotalSeconds, false);
+            _lastRequest = "No valid response received from the server.";
+        }
+        finally
+        {
+            await tickerCancellation.CancelAsync();
+            await ticker;
+            _busy = false;
+            _pendingDish = null;
+            _lastResult = _result;
+            _focusResult = _result is not null;
+        }
+    }
+
+    private async Task UpdateElapsedAsync(System.Diagnostics.Stopwatch timer, CancellationToken ct)
+    {
+        using var ticks = new PeriodicTimer(TimeSpan.FromMilliseconds(100));
+        try
+        {
+            while (await ticks.WaitForNextTickAsync(ct))
+            {
+                _elapsed = timer.Elapsed.TotalSeconds;
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested) { }
+    }
+
+    private async Task SetScenarioAsync(string scenario)
+    {
+        if (_busy) return;
+        _busy = true;
+        _demoStatus = scenario == "proactive"
+            ? "Applying the fix… If the cache has expired, the first load takes 10 seconds."
+            : "Setting the scenario…";
+        try
+        {
+            using var client = Clients.CreateClient("orders");
+            using var response = await client.PostAsync($"/demo/{scenario}", null, _lifetime.Token);
+            var reply = await response.Content.ReadFromJsonAsync<ApiReply>(_lifetime.Token);
+            _demoStatus = reply?.Message ?? "Couldn't set the scenario.";
+            if (response.IsSuccessStatusCode) _scenario = scenario;
+        }
+        catch (OperationCanceledException) when (_lifetime.IsCancellationRequested) { }
+        catch (Exception exception) when (exception is HttpRequestException or OperationCanceledException or System.Text.Json.JsonException)
+        {
+            _demoStatus = "Couldn't set the scenario. Check that both APIs are running.";
+        }
+        finally { _busy = false; }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_focusResult)
+        {
+            _focusResult = false;
+            await _closeButton.FocusAsync();
+        }
+        if (_restoreFocus && _lastDish is not null)
+        {
+            _restoreFocus = false;
+            await _orderButtons[_lastDish].FocusAsync();
+        }
+    }
+
+    private bool _restoreFocus;
+    private Task CloseResultAsync()
+    {
+        _result = null;
+        _restoreFocus = true;
+        return Task.CompletedTask;
+    }
+
+    private Task HandleModalKeyAsync(KeyboardEventArgs args) => args.Key == "Escape" ? CloseResultAsync() : Task.CompletedTask;
+    public void Dispose() { _lifetime.Cancel(); _lifetime.Dispose(); }
+    private sealed record ApiReply(string? Message, string? TraceId, bool KitchenAccepted = false);
+    private sealed record Confirmation(string Title, string Message, double Elapsed, bool Success);
+}

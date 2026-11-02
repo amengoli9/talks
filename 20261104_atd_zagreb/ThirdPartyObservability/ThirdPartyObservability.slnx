@@ -1,0 +1,24 @@
+<Solution>
+  <Folder Name="/Demo/">
+    <File Path="README.md" />
+    <File Path="compose.yaml" />
+    <File Path="requests.http" />
+    <File Path="rehearse.ps1" />
+    <File Path="run-local.ps1" />
+    <File Path="load.ps1" />
+    <File Path="ThirdPartyObservability.slnLaunch" />
+  </Folder>
+  <Folder Name="/Observability/">
+    <File Path="observability/collector.yaml" />
+    <File Path="observability/prometheus.yaml" />
+    <File Path="observability/alerts.yaml" />
+    <File Path="observability/grafana/restaurant.json" />
+  </Folder>
+  <Project Path="Demo.Shared/Demo.Shared.csproj" />
+  <Project Path="Orders.Api/Orders.Api.csproj" />
+  <Project Path="Kitchen.Worker/Kitchen.Worker.csproj" />
+  <Project Path="Inventory.Api/Inventory.Api.csproj" />
+  <Project Path="Supplier.Api/Supplier.Api.csproj" />
+  <Project Path="Payments.Api/Payments.Api.csproj" />
+  <Project Path="Notifications.Worker/Notifications.Worker.csproj" />
+</Solution>

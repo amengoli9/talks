@@ -1,0 +1,497 @@
+{
+  "tags": [
+    "restaurant",
+    "opentelemetry"
+  ],
+  "refresh": "5s",
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "schemaVersion": 40,
+  "title": "Restaurant - Full observability",
+  "uid": "restaurant-full",
+  "panels": [
+    {
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "y": 0.0,
+        "x": 0
+      },
+      "fieldConfig": {
+        "overrides": [],
+        "defaults": {}
+      },
+      "title": "Orders by service and outcome",
+      "datasource": {
+        "uid": "restaurant-prometheus",
+        "type": "prometheus"
+      },
+      "type": "timeseries",
+      "targets": [
+        {
+          "legendFormat": "{{service_name}} {{outcome}} {{queue}} {{job}}",
+          "expr": "sum by (service_name, outcome) (restaurant_orders_total)",
+          "refId": "A"
+        }
+      ],
+      "id": 1,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "y": 0.0,
+        "x": 8
+      },
+      "fieldConfig": {
+        "overrides": [],
+        "defaults": {}
+      },
+      "title": "Processing p95 (seconds)",
+      "datasource": {
+        "uid": "restaurant-prometheus",
+        "type": "prometheus"
+      },
+      "type": "timeseries",
+      "targets": [
+        {
+          "legendFormat": "{{service_name}} {{outcome}} {{queue}} {{job}}",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(restaurant_processing_duration_seconds_bucket[2m])))",
+          "refId": "A"
+        }
+      ],
+      "id": 2,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "y": 0.0,
+        "x": 16
+      },
+      "fieldConfig": {
+        "overrides": [],
+        "defaults": {}
+      },
+      "title": "Message age p95 (seconds)",
+      "datasource": {
+        "uid": "restaurant-prometheus",
+        "type": "prometheus"
+      },
+      "type": "timeseries",
+      "targets": [
+        {
+          "legendFormat": "{{service_name}} {{outcome}} {{queue}} {{job}}",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(restaurant_message_age_seconds_bucket[2m])))",
+          "refId": "A"
+        }
+      ],
+      "id": 3,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "y": 8.0,
+        "x": 0
+      },
+      "fieldConfig": {
+        "overrides": [],
+        "defaults": {}
+      },
+      "title": "Ready messages by queue",
+      "datasource": {
+        "uid": "restaurant-prometheus",
+        "type": "prometheus"
+      },
+      "type": "timeseries",
+      "targets": [
+        {
+          "legendFormat": "{{service_name}} {{outcome}} {{queue}} {{job}}",
+          "expr": "rabbitmq_queue_messages_ready",
+          "refId": "A"
+        }
+      ],
+      "id": 4,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "y": 8.0,
+        "x": 8
+      },
+      "fieldConfig": {
+        "overrides": [],
+        "defaults": {}
+      },
+      "title": "Unacknowledged messages",
+      "datasource": {
+        "uid": "restaurant-prometheus",
+        "type": "prometheus"
+      },
+      "type": "timeseries",
+      "targets": [
+        {
+          "legendFormat": "{{service_name}} {{outcome}} {{queue}} {{job}}",
+          "expr": "rabbitmq_queue_messages_unacked",
+          "refId": "A"
+        }
+      ],
+      "id": 5,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "y": 8.0,
+        "x": 16
+      },
+      "fieldConfig": {
+        "overrides": [],
+        "defaults": {}
+      },
+      "title": "Redis memory (bytes)",
+      "datasource": {
+        "uid": "restaurant-prometheus",
+        "type": "prometheus"
+      },
+      "type": "timeseries",
+      "targets": [
+        {
+          "legendFormat": "{{service_name}} {{outcome}} {{queue}} {{job}}",
+          "expr": "redis_memory_used_bytes",
+          "refId": "A"
+        }
+      ],
+      "id": 6,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "y": 16.0,
+        "x": 0
+      },
+      "fieldConfig": {
+        "overrides": [],
+        "defaults": {}
+      },
+      "title": "Redis cache outcomes",
+      "datasource": {
+        "uid": "restaurant-prometheus",
+        "type": "prometheus"
+      },
+      "type": "timeseries",
+      "targets": [
+        {
+          "legendFormat": "{{service_name}} {{outcome}} {{queue}} {{job}}",
+          "expr": "sum by (outcome) (restaurant_cache_lookups_total)",
+          "refId": "A"
+        }
+      ],
+      "id": 7,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "y": 16.0,
+        "x": 8
+      },
+      "fieldConfig": {
+        "overrides": [],
+        "defaults": {}
+      },
+      "title": "PostgreSQL connections",
+      "datasource": {
+        "uid": "restaurant-prometheus",
+        "type": "prometheus"
+      },
+      "type": "timeseries",
+      "targets": [
+        {
+          "legendFormat": "{{service_name}} {{outcome}} {{queue}} {{job}}",
+          "expr": "pg_stat_database_numbackends{datname=\"restaurant\"}",
+          "refId": "A"
+        }
+      ],
+      "id": 8,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "y": 16.0,
+        "x": 16
+      },
+      "fieldConfig": {
+        "overrides": [],
+        "defaults": {}
+      },
+      "title": "Supplier retry count",
+      "datasource": {
+        "uid": "restaurant-prometheus",
+        "type": "prometheus"
+      },
+      "type": "timeseries",
+      "targets": [
+        {
+          "legendFormat": "{{service_name}} {{outcome}} {{queue}} {{job}}",
+          "expr": "restaurant_http_retries_total",
+          "refId": "A"
+        }
+      ],
+      "id": 9,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "y": 24.0,
+        "x": 0
+      },
+      "fieldConfig": {
+        "overrides": [],
+        "defaults": {}
+      },
+      "title": "Notification outcomes",
+      "datasource": {
+        "uid": "restaurant-prometheus",
+        "type": "prometheus"
+      },
+      "type": "timeseries",
+      "targets": [
+        {
+          "legendFormat": "{{service_name}} {{outcome}} {{queue}} {{job}}",
+          "expr": "sum by (outcome) (restaurant_notifications_total)",
+          "refId": "A"
+        }
+      ],
+      "id": 10,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "y": 24.0,
+        "x": 8
+      },
+      "fieldConfig": {
+        "overrides": [],
+        "defaults": {}
+      },
+      "title": "Outbox messages dispatched",
+      "datasource": {
+        "uid": "restaurant-prometheus",
+        "type": "prometheus"
+      },
+      "type": "timeseries",
+      "targets": [
+        {
+          "legendFormat": "{{service_name}} {{outcome}} {{queue}} {{job}}",
+          "expr": "restaurant_outbox_dispatched_total",
+          "refId": "A"
+        }
+      ],
+      "id": 11,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "y": 24.0,
+        "x": 16
+      },
+      "fieldConfig": {
+        "overrides": [],
+        "defaults": {}
+      },
+      "title": "Infrastructure availability",
+      "datasource": {
+        "uid": "restaurant-prometheus",
+        "type": "prometheus"
+      },
+      "type": "timeseries",
+      "targets": [
+        {
+          "legendFormat": "{{service_name}} {{outcome}} {{queue}} {{job}}",
+          "expr": "up",
+          "refId": "A"
+        }
+      ],
+      "id": 12,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "y": 32.0,
+        "x": 0
+      },
+      "fieldConfig": {
+        "overrides": [],
+        "defaults": {}
+      },
+      "title": "Dependency availability",
+      "datasource": {
+        "uid": "restaurant-prometheus",
+        "type": "prometheus"
+      },
+      "type": "timeseries",
+      "targets": [
+        {
+          "legendFormat": "{{service_name}} {{outcome}} {{queue}} {{job}}",
+          "expr": "redis_up or pg_up",
+          "refId": "A"
+        }
+      ],
+      "id": 13,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "y": 32.0,
+        "x": 8
+      },
+      "fieldConfig": {
+        "overrides": [],
+        "defaults": {}
+      },
+      "title": "Runtime heap (bytes)",
+      "datasource": {
+        "uid": "restaurant-prometheus",
+        "type": "prometheus"
+      },
+      "type": "timeseries",
+      "targets": [
+        {
+          "legendFormat": "{{service_name}} {{outcome}} {{queue}} {{job}}",
+          "expr": "dotnet_gc_last_collection_heap_size_bytes",
+          "refId": "A"
+        }
+      ],
+      "id": 14,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "y": 32.0,
+        "x": 16
+      },
+      "fieldConfig": {
+        "overrides": [],
+        "defaults": {}
+      },
+      "title": "HTTP client duration p95",
+      "datasource": {
+        "uid": "restaurant-prometheus",
+        "type": "prometheus"
+      },
+      "type": "timeseries",
+      "targets": [
+        {
+          "legendFormat": "{{service_name}} {{outcome}} {{queue}} {{job}}",
+          "expr": "histogram_quantile(0.95, sum by (le, service_name) (rate(http_client_request_duration_seconds_bucket[2m])))",
+          "refId": "A"
+        }
+      ],
+      "id": 15,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
+    }
+  ],
+  "version": 1
+}

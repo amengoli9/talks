@@ -1,0 +1,14 @@
+{
+  "profiles": {
+    "Orders.Api": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "launchUrl": "?demo=1",
+      "applicationUrl": "http://localhost:5270",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "OTEL_EXPORTER_OTLP_ENDPOINT": "http://localhost:4317"
+      }
+    }
+  }
+}

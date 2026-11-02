@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/Talk/">
+    <File Path="README.md" />
+    <File Path="requests.http" />
+    <File Path="rehearse.ps1" />
+    <File Path="OpenTelemetryDemo.slnLaunch" />
+  </Folder>
+  <Project Path="Kitchen.Api/Kitchen.Api.csproj" />
+  <Project Path="Notifications.Api/Notifications.Api.csproj" />
+  <Project Path="Orders.Api/Orders.Api.csproj" />
+</Solution>

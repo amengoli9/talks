@@ -1,0 +1,39 @@
+@orders = http://localhost:5280
+
+### Menu and instructions
+GET {{orders}}/
+
+### Submit; copy the returned id and traceId
+POST {{orders}}/orders
+Content-Type: application/json
+
+{"dish":"margherita","scenario":"normal"}
+
+### First lookup: Redis miss -> PostgreSQL -> Redis SET. Repeat for Redis hit.
+@id = REPLACE_WITH_ORDER_ID
+GET {{orders}}/orders/{{id}}
+
+### Notification progress: pending -> dispatched -> delivered
+GET {{orders}}/orders/{{id}}/notification
+
+### Dependency readiness (PostgreSQL and RabbitMQ; Redis is optional)
+GET {{orders}}/health/ready
+
+### Additional scenarios: slow-supplier, supplier-retry, supplier-down,
+### sold-out, payment-declined, payment-timeout, notification-fail
+POST {{orders}}/orders
+Content-Type: application/json
+
+{"dish":"margherita","scenario":"supplier-retry"}
+
+### HTTP 202 stays fast; kitchen trace contains a three-second PostgreSQL query
+POST {{orders}}/orders
+Content-Type: application/json
+
+{"dish":"risotto","scenario":"slow-db"}
+
+### HTTP 202, followed by failed processing and dead-lettering
+POST {{orders}}/orders
+Content-Type: application/json
+
+{"dish":"carbonara","scenario":"fail"}
