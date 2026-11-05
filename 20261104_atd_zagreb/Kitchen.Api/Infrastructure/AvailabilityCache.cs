@@ -1,10 +1,12 @@
 using System.Diagnostics;
+using Kitchen.Api.Domain;
+using Kitchen.Api.Utilities;
 using RestaurantDemo;
 
-namespace Kitchen.Api;
+namespace Kitchen.Api.Infrastructure;
 
 // One immutable snapshot lets orders read while the background worker refreshes it.
-public sealed class AvailabilityCache(ILogger<AvailabilityCache> logger) : BackgroundService
+public sealed class AvailabilityCache(ILogger<AvailabilityCache> logger) : BackgroundService, IAvailability
 {
     private static readonly TimeSpan Lifetime = TimeSpan.FromSeconds(60);
     private static readonly TimeSpan RefreshAhead = TimeSpan.FromSeconds(30);
@@ -40,7 +42,7 @@ public sealed class AvailabilityCache(ILogger<AvailabilityCache> logger) : Backg
         activity?.SetTag("cache.hit", hit);
         if (!hit)
         {
-            logger.LogWarning("Availability cache expired; this order must wait for the management system");
+            logger.AvailabilityCacheExpired();
             await refreshLock.WaitAsync(ct);
             try
             {
@@ -64,14 +66,14 @@ public sealed class AvailabilityCache(ILogger<AvailabilityCache> logger) : Backg
         var delayMs = behavior == "slow" ? Random.Shared.Next(2000, 4501) : 50;
         activity?.SetTag("management.behavior", behavior);
         activity?.SetTag("management.delay_ms", delayMs);
-        logger.LogInformation("Management availability check: {Behavior}, delay {DelayMs} ms", behavior, delayMs);
+        logger.ManagementAvailabilityChecked(behavior, delayMs);
         await Task.Delay(delayMs, ct);
         if (behavior == "error")
         {
             var exception = new ManagementUnavailableException();
             activity?.SetStatus(ActivityStatusCode.Error, exception.Message);
             activity?.AddException(exception);
-            logger.LogError(exception, "Management system temporarily unavailable; order cannot be confirmed");
+            logger.ManagementUnavailable(exception);
             throw exception;
         }
         return Stock().GetValueOrDefault(dish);
@@ -103,12 +105,12 @@ public sealed class AvailabilityCache(ILogger<AvailabilityCache> logger) : Backg
         using var activity = Telemetry.Source.StartActivity("availability.reload");
         activity?.SetTag("refresh.trigger", trigger);
         activity?.SetTag("management.delay_ms", managementDelayMs);
-        logger.LogInformation("Reloading availability from management system; trigger {Trigger}, delay {DelayMs} ms", trigger, managementDelayMs);
+        logger.AvailabilityReloading(trigger, managementDelayMs);
         // Simulated management system I/O. No thread is blocked and no third API is needed.
         await Task.Delay(managementDelayMs, ct);
         snapshot = new Snapshot(Stock(), DateTimeOffset.UtcNow + Lifetime);
         Interlocked.Increment(ref refreshCount);
-        logger.LogInformation("Availability refreshed; trigger {Trigger}, valid for {LifetimeSeconds} seconds", trigger, Lifetime.TotalSeconds);
+        logger.AvailabilityRefreshed(trigger, Lifetime.TotalSeconds);
     }
 
     public async Task SetScenarioAsync(string scenario, CancellationToken ct)
@@ -133,7 +135,7 @@ public sealed class AvailabilityCache(ILogger<AvailabilityCache> logger) : Backg
                 managementDelayMs = scenario == "slow" ? 10_000 : 50;
                 snapshot = new Snapshot(Stock(), scenario == "slow" ? DateTimeOffset.MinValue : DateTimeOffset.UtcNow + Lifetime);
             }
-            logger.LogInformation("Presenter selected demo scenario {Scenario}", scenario);
+            logger.DemoScenarioSelected(scenario);
         }
         finally { refreshLock.Release(); }
     }
@@ -144,4 +146,3 @@ public sealed class AvailabilityCache(ILogger<AvailabilityCache> logger) : Backg
     private sealed record Snapshot(Dictionary<string, bool> Availability, DateTimeOffset ExpiresAt);
 }
 
-public sealed class ManagementUnavailableException() : Exception("The restaurant management system is temporarily unavailable.");

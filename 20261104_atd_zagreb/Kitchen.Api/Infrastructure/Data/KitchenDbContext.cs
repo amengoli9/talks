@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using Kitchen.Api.Domain;
 
-namespace Kitchen.Api;
+namespace Kitchen.Api.Infrastructure.Data;
 
 public sealed class KitchenDbContext(DbContextOptions<KitchenDbContext> options) : DbContext(options)
 {
@@ -38,10 +39,3 @@ public sealed class KitchenDbContext(DbContextOptions<KitchenDbContext> options)
     }
 }
 
-public sealed class AcceptedOrder
-{
-    public long Id { get; set; }
-    public required string Dish { get; set; }
-    public required string DishName { get; set; }
-    public DateTimeOffset AcceptedAt { get; set; }
-}

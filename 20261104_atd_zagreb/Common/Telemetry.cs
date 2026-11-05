@@ -21,7 +21,7 @@ public static class Telemetry
 
     public static void AddDemoTelemetry(this WebApplicationBuilder builder, string serviceName = ServiceName)
     {
-        // One OTLP destination for all three signals. Override in the environment.
+        #region config otlp
         var endpoint = new Uri(builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"]
             ?? "http://localhost:4317");
         void ExportToDashboard(OtlpExporterOptions options)
@@ -29,48 +29,43 @@ public static class Telemetry
             options.Endpoint = endpoint;
             options.Protocol = OtlpExportProtocol.Grpc;
         }
+        #endregion
+
+
+
+
+
+
+
 
         builder.Services.AddOpenTelemetry()
             .ConfigureResource(resource => resource.AddService(serviceName, serviceVersion: "1.0.0"))
 
-             //.WithTracing(opt => opt
-             //        .AddAspNetCoreInstrumentation()
-             //        .AddHttpClientInstrumentation()
-             //        .AddEntityFrameworkCoreInstrumentation()
-             //        .AddOtlpExporter()
-             //     )
-             //.WithMetrics(opt => opt
-             //   .AddAspNetCoreInstrumentation()
-             //   .AddOtlpExporter()
-             //)
-             //.WithLogging(logging =>
-             //       logging
-                    
-             //       .AddOtlpExporter()
-             //)
 
+        #region fullObservability
+        .WithTracing(tracing => tracing
+            .SetSampler(new DemoSampler()) // Capture every request, excluding render acknowledgements.
+            .AddAspNetCoreInstrumentation(options => options.RecordException = true)
+            .AddHttpClientInstrumentation(options => options.RecordException = true)
+            .AddEntityFrameworkCoreInstrumentation()
+            .AddSource(Source.Name) // Subscribe to our business spans.
+            .AddProcessor(new ErrorEventProcessor())
+            .AddOtlpExporter(ExportToDashboard))
+        .WithMetrics(metrics => metrics
+            .AddAspNetCoreInstrumentation()
+            .AddMeter(Meter.Name)
+            .AddView("restaurant.order.duration", new ExplicitBucketHistogramConfiguration
+            {
+                Boundaries = [0.05, 0.1, 0.25, 0.5, 1, 5, 10, 15]
+            })
+            .AddOtlpExporter((options, reader) =>
+            {
+                ExportToDashboard(options);
+                reader.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = 1000;
+            }));
+        #endregion
 
-            .WithTracing(tracing => tracing
-                .SetSampler(new DemoSampler()) // Capture every request, excluding render acknowledgements.
-                .AddAspNetCoreInstrumentation(options => options.RecordException = true)
-                .AddHttpClientInstrumentation(options => options.RecordException = true)
-                .AddEntityFrameworkCoreInstrumentation()
-                .AddSource(Source.Name) // Subscribe to our business spans.
-                .AddProcessor(new ErrorEventProcessor())
-                .AddOtlpExporter(ExportToDashboard))
-            .WithMetrics(metrics => metrics
-                .AddAspNetCoreInstrumentation()
-                .AddMeter(Meter.Name)
-                .AddView("restaurant.order.duration", new ExplicitBucketHistogramConfiguration
-                {
-                    Boundaries = [0.05, 0.1, 0.25, 0.5, 1, 5, 10, 15]
-                })
-                .AddOtlpExporter((options, reader) =>
-                {
-                    ExportToDashboard(options);
-                    reader.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = 1000;
-                }));
-
+        #region loggingObservability
         // Keep demo logging portable: console + OTLP, with no Windows Event Log dependency.
         builder.Logging.ClearProviders();
         builder.Logging.AddSimpleConsole();
@@ -80,9 +75,9 @@ public static class Telemetry
                 .AddService(serviceName, serviceVersion: "1.0.0"));
             logging.IncludeFormattedMessage = true;
             logging.IncludeScopes = true;
-            // ILogger records automatically carry the active TraceId and SpanId.
             logging.AddOtlpExporter(ExportToDashboard);
         });
+        #endregion
     }
 
     private sealed class DemoSampler : Sampler

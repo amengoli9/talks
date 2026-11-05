@@ -127,14 +127,53 @@ La trace contiene `availability.lookup` con `management.behavior` e `management.
 - La correzione anticipa il refresh di 30 secondi e funziona per il ritardo simulato di 10 secondi. Se un caricamento supera la validità residua, le richieste tornano ad attendere: non serviamo uno snapshot già scaduto. Questa cache di disponibilità non sostituisce una prenotazione atomica delle scorte in un sistema reale.
 - I controlli alterano lo stato condiviso della demo. Una sola persona deve pilotare gli scenari; i normali ordini concorrenti condividono il caricamento grazie a un semaforo.
 
+## Log strutturati e source generation
+
+I log applicativi dei tre servizi usano metodi di estensione `partial` con `[LoggerMessage]`, raccolti nei rispettivi `Utilities/LoggingExtensions.cs`, come negli esempi degli altri talk. Il compilatore genera l'implementazione, evitando di interpretare il template a ogni chiamata e mantenendo parametri tipizzati, livello, nome evento ed EventId stabili. Non servono pacchetti aggiuntivi.
+
+Per mostrare un esempio, ordina una Margherita in servizio normale e apri i log della trace in `Zagreb.Orders`. Il caso d'uso chiama:
+
+```csharp
+logger.OrderConfirmed(dish.Id, timer.ElapsedMilliseconds, true);
+```
+
+Il metodo è dichiarato in `Orders.Api/Utilities/LoggingExtensions.cs`:
+
+```csharp
+[LoggerMessage(EventId = 1001, Level = LogLevel.Information,
+    Message = "Kitchen accepted {Dish}; confirmation in {ElapsedMs} ms; notification sent: {NotificationSent}")]
+public static partial void OrderConfirmed(
+    this ILogger logger, string dish, long elapsedMs, bool notificationSent);
+```
+
+Il messaggio leggibile può essere `Kitchen accepted margherita; confirmation in 42 ms; notification sent: True`. Nei dettagli del record trovi anche le proprietà separate `Dish = "margherita"`, `ElapsedMs = 42` (numero) e `NotificationSent = true` (booleano), oltre al template originale e all'evento `1001 / OrderConfirmed`. Il tempo è illustrativo: il valore effettivo viene misurato per ogni ordine. Le proprietà strutturate si possono usare per filtrare i log senza analizzare il testo del messaggio. Non usiamo interpolazione di stringhe per costruire i messaggi.
+
+TraceId e SpanId sono associati automaticamente dal provider OpenTelemetry all'attività corrente. Per gli errori, i metodi generati ricevono l'oggetto `Exception` separatamente dal template, conservando eccezione e stack trace. Le chiamate del framework e delle strumentazioni continuano a usare i propri logger.
+
 ## Codice e prove
+
+La struttura segue gli esempi KitchenApp dei talk NetConf Roma e WPC: un progetto per servizio, con `Controllers`, `Domain` e `Infrastructure`. `Program.cs` compone l'applicazione; `ServiceExtensions.cs` collega le interfacce agli adapter tramite dependency injection.
+
+- **Controllers**: adapter di ingresso HTTP. Convertono le richieste in chiamate ai servizi e gli esiti applicativi nelle risposte HTTP esistenti. `DemoEndpoints.cs` contiene le minimal API di controllo, registrate solo in Development.
+- **Domain**: servizi applicativi, modelli, esiti e porte di uscita. Non dipende da controller, `HttpClient`, EF Core o implementazioni di Infrastructure. Log, span e metriche restano vicini ai casi d'uso per rendere leggibile la demo di osservabilità.
+- **Infrastructure**: adapter HTTP per cucina e notifiche, repository EF Core/SQLite, cache con refresh in background e consegna simulata delle notifiche. Gli errori tecnici vengono tradotti negli errori definiti dal dominio.
+
+Il flusso è `OrdersController → IOrderService → IKitchenGateway / INotificationGateway`; nell'API cucina è `KitchenController → IKitchenService → IAvailability / IAcceptedOrderRepository`. Le interfacce appartengono a Domain, gli adapter le implementano in Infrastructure. I controlli del relatore configurano direttamente gli adapter della demo e non entrano nei casi d'uso degli ordini.
 
 | File | Cosa mostrare |
 | --- | --- |
-| `Orders.Api/Program.cs` | Conferma, chiamata HTTP alla cucina, metriche di esito e durata |
-| `Kitchen.Api/Program.cs` | Accettazione della comanda e piatto esaurito |
-| `Kitchen.Api/KitchenDbContext.cs` | Comande accettate salvate in SQLite e span EF Core automatici |
-| `Kitchen.Api/AvailabilityCache.cs` | Cache miss, caricamento lento, correzione in background |
+| `Orders.Api/Controllers/OrdersController.cs` | Contratto HTTP e conversione degli esiti in 200, 400, 409, 502 e 504 |
+| `Orders.Api/Domain/OrderService.cs` | Conferma, notifica dopo l'accettazione, metriche di esito e durata |
+| `Orders.Api/Infrastructure/HttpKitchenGateway.cs` | Adapter HTTP della porta cucina |
+| `Orders.Api/Infrastructure/HttpNotificationGateway.cs` | Adapter HTTP della porta notifiche |
+| `Kitchen.Api/Domain/KitchenService.cs` | Accettazione della comanda e piatto esaurito |
+| `Kitchen.Api/Infrastructure/AcceptedOrderRepository.cs` | Adapter di persistenza della comanda |
+| `Kitchen.Api/Infrastructure/Data/KitchenDbContext.cs` | SQLite, vincolo sul nome e span EF Core automatici |
+| `Kitchen.Api/Infrastructure/AvailabilityCache.cs` | Cache miss, caricamento lento, correzione in background |
+| `Notifications.Api/Domain/NotificationService.cs` | Caso d'uso di notifica e span applicativo |
+| `Notifications.Api/Infrastructure/DemoNotificationDelivery.cs` | Consegna simulata e scenari di guasto |
+| `*/ServiceExtensions.cs` | Registrazione di servizi, porte e adapter |
+| `*/Utilities/LoggingExtensions.cs` | Log strutturati e source-generated con LoggerMessage, EventId e parametri tipizzati |
 | `Common/Telemetry.cs` | ActivitySource, Meter, ILogger e tre pipeline OTLP |
 | `Common/Menu.cs` | Menu condiviso e contratti minimi |
 | `Orders.Api/Components/Pages/Home.razor` | Menu Blazor, chiamate HTTP, attesa e popup in C# |
