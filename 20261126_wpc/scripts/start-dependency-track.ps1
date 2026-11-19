@@ -78,6 +78,10 @@ if ($Standalone) {
 $secretDir = Join-Path $root '.secrets'
 $envPath = Join-Path $secretDir 'dependency-track.env'
 New-Item -ItemType Directory -Force $secretDir | Out-Null
+if ([System.Environment]::OSVersion.Platform -ne [System.PlatformID]::Win32NT) {
+    & chmod 700 $secretDir
+    if ($LASTEXITCODE -ne 0) { throw 'Impossibile restringere i permessi della directory .secrets.' }
+}
 if (-not (Test-Path $envPath)) {
     $password = [Convert]::ToHexString([Security.Cryptography.RandomNumberGenerator]::GetBytes(24))
     "DTRACK_DB_PASSWORD=$password" | Set-Content $envPath
