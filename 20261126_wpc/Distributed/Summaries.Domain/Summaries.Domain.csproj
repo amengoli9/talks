@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>BabyLog.Distributed.Summaries.Domain</AssemblyName>
+    <RootNamespace>BabyLog.Distributed.Summaries.Domain</RootNamespace>
+  </PropertyGroup>
+</Project>

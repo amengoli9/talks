@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>BabyLog.Distributed.Summaries.Application</AssemblyName>
+    <RootNamespace>BabyLog.Distributed.Summaries.Application</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Summaries.Domain/Summaries.Domain.csproj" />
+    <ProjectReference Include="../Events/Events.csproj" />
+    <Compile Include="../Shared/RomeDay.cs" Link="RomeDay.cs" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,5 @@
+services:
+  babylog:
+    image: babylog:chiseled
+    build:
+      target: chiseled

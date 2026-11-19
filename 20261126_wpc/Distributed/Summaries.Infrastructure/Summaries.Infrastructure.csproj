@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>BabyLog.Distributed.Summaries.Infrastructure</AssemblyName>
+    <RootNamespace>BabyLog.Distributed.Summaries.Infrastructure</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Summaries.Application/Summaries.Application.csproj" />
+    <ProjectReference Include="../RabbitMq/RabbitMq.csproj" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+</Project>

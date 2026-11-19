@@ -1,0 +1,14 @@
+# Only the application, locked build inputs and container definitions enter BuildKit.
+*
+!global.json
+!Directory.Packages.props
+!nuget.config
+!BabyLog
+!BabyLog/**
+!containers
+!containers/**
+**/bin
+**/obj
+**/data
+**/.env
+**/.env.*

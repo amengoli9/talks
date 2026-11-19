@@ -1,0 +1,11 @@
+# Contratto di implementazione
+
+Leggere PLAN.md. Workspace D:/progetti/privale/talks/20261126_wpc. Un host BabyLog .NET 10, Blazor Interactive Server + API Controllers, SQLite. Nessuna Actions prima di verifica locale completa. Git/GitHub amengoli9; nessun commit/push degli agenti. Tokensave non disponibile in questa sessione; verificare discovery prima di scansioni. Nessuna modifica fuori workspace.
+
+API prefisso /api: GET /baby -> BabyProfile; GET /activities?date=YYYY-MM-DD -> ActivityEntry[]; POST /activities CreateActivityRequest -> ActivityEntry (201); DELETE /activities/{id} -> 204 o 404; GET /summary?date=YYYY-MM-DD -> DailySummary; GET /health -> 200. Date locali Europe/Rome, memorizzazione UTC. Kind string milk/diaper/sleep. Quantità latte 1..500 ml, sleep end>start. Note massimo 200 caratteri. Tutti i form e testi UI italiani.
+
+Root possiede Contracts, Domain/IBabyLogGateway.cs, Program.cs, ServiceExtensions.cs, appsettings, soluzione/global.json/nuget.config/.gitignore, README/runbook/rehearse. Backend possiede altri Domain, Controllers, Infrastructure/Data e repository, csproj BabyLog e Directory.Packages.props, test. Esporre AddBabyLogBackend(IServiceCollection,IConfiguration) in BackendServiceExtensions e InitializeBabyLogAsync(WebApplication) per schema/seed. Frontend possiede Components, wwwroot, Infrastructure/HttpBabyLogGateway.cs; implementa IBabyLogGateway. Container agent possiede containers, compose.yaml, compose.chiseled.yaml, .dockerignore, scripts/build-images.ps1 e smoke-containers.ps1. Non toccare file altrui.
+
+Root integra AddHttpClient<IBabyLogGateway,HttpBabyLogGateway> con BabyLog:BaseUrl (default http://127.0.0.1:5080; container http://127.0.0.1:8080). Connessione SQLite ConnectionStrings:BabyLog (default Data Source=data/babylog.db); DataProtection:Path (default data/keys). Porta locale 5080, container 8080. Tutti gli script PowerShell7, fail su exit code e report in .artifacts. Immagini babylog:standard e babylog:chiseled. Volume /data (db e keys), rootfs readonly, /tmp tmpfs.
+
+Demo vulnerabilità: usare scenario separato dal progetto principale, dipendenza veramente usata, advisory verificato. Evitare di introdurre CVE nell'app predefinita. Nessun workflow YAML fino al completamento locale. Max 3 agenti contemporanei. Tutti gpt-6.1-sol.

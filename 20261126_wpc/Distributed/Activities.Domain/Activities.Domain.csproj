@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>BabyLog.Distributed.Activities.Domain</AssemblyName>
+    <RootNamespace>BabyLog.Distributed.Activities.Domain</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../BabyLog/Domain/Activity.cs" Link="Activity.cs" />
+  </ItemGroup>
+</Project>

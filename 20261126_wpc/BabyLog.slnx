@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="BabyLog/BabyLog.csproj" />
+  <Project Path="BabyLog.Tests/BabyLog.Tests.csproj" />
+</Solution>

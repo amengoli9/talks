@@ -1,0 +1,103 @@
+@page "/"
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@inject IBabyLogGateway Gateway
+<PageTitle>BabyLog · Piccoli momenti, ogni giorno</PageTitle>
+<div class="shell">
+    <header class="topbar"><a class="brand" href="/" aria-label="BabyLog, diario"><span class="brandmark">b.</span> babylog<span class="branddot">●</span></a><span class="topnote">IL SUO MONDO, UN GIORNO ALLA VOLTA</span><span class="demo">Profilo dimostrativo</span></header>
+    <main>
+        <section class="intro"><div><span class="eyebrow">IL DIARIO DI @(_baby?.Name.ToUpperInvariant() ?? "…")</span><h1>Piccoli momenti.<br /><em>Una grande storia.</em></h1><p>Poppate, cambi e dolci riposi. Tutto qui, per ricordare la sua giornata.</p></div><div class="babycard"><div class="babyface" aria-hidden="true">☀</div><div><strong>@(_baby?.Name ?? "Caricamento…")</strong><span>@AgeText</span><small>Ogni giorno, una nuova scoperta.</small></div><span class="tinyflower" aria-hidden="true">✿</span></div></section>
+        <section class="daybar" aria-label="Seleziona giornata"><div><span class="eyebrow">LA SUA GIORNATA</span><h2>@DateHeading</h2></div><div class="datecontrol"><button class="iconbutton" @onclick="() => ChangeDay(-1)" disabled="@Busy" aria-label="Giorno precedente">‹</button><input aria-label="Data del diario" type="date" @bind="_date" @bind:after="LoadAsync" disabled="@Busy" /><button class="iconbutton" @onclick="() => ChangeDay(1)" disabled="@Busy" aria-label="Giorno successivo">›</button><button class="today" @onclick="TodayAsync" disabled="@Busy">Oggi</button></div></section>
+        @if (_error is not null) { <div class="alert" role="alert">@_error <button @onclick="LoadAsync" disabled="@Busy">Riprova</button></div> }
+        <section class="stats" aria-label="Riepilogo del giorno" aria-busy="@_loading">
+            <article class="stat milk"><span class="stat-icon" aria-hidden="true">♧</span><div><span>Latte bevuto</span><strong>@(_summary?.MilkMilliliters.ToString() ?? "—") <small>ml</small></strong><p>Un sorso alla volta</p></div></article>
+            <article class="stat diaper"><span class="stat-icon" aria-hidden="true">◇</span><div><span>Cambi pannolino</span><strong>@(_summary?.DiaperCount.ToString() ?? "—") <small>cambi</small></strong><p>Fresco e felice</p></div></article>
+            <article class="stat sleep"><span class="stat-icon" aria-hidden="true">☾</span><div><span>Tempo di sonno</span><strong>@SleepText</strong><p>Piccoli sogni crescono</p></div></article>
+        </section>
+        <div class="workspace"><section class="entrypanel"><span class="eyebrow">UN NUOVO MOMENTO</span><h2>Cosa è successo?</h2><p class="muted">Aggiungi un ricordo alla giornata.</p><div class="tabs" role="group" aria-label="Tipo di attività">@foreach (var kind in new[] { "milk", "diaper", "sleep" }) { <button class="@(_kind == kind ? "active" : "")" aria-pressed="@(_kind == kind)" disabled="@Busy" @onclick="() => _kind = kind">@Label(kind)</button> }</div>
+            <form @onsubmit="SaveAsync" @onsubmit:preventDefault>
+                <label for="start">@(_kind == "sleep" ? "Inizio del riposo" : "Orario") <span>· ora di Roma</span></label><input id="start" type="datetime-local" value="@_startText" @onchange="e => _startText = e.Value?.ToString() ?? string.Empty" required disabled="@Busy" />
+                @if (_kind == "milk") { <label for="milk">Quantità di latte <span>· ml</span></label><input id="milk" type="number" min="1" max="500" @bind="_milliliters" required disabled="@Busy" /> }
+                @if (_kind == "sleep") { <label for="end">Fine del riposo <span>· ora di Roma</span></label><input id="end" type="datetime-local" value="@_endText" @onchange="e => _endText = e.Value?.ToString() ?? string.Empty" required disabled="@Busy" /> }
+                <label for="notes">Una piccola nota <span>· facoltativa</span></label><textarea id="notes" rows="2" maxlength="200" @bind="_notes" placeholder="Qualcosa da ricordare…" disabled="@Busy"></textarea><small class="timezone-note">Gli orari seguono il fuso Europe/Rome.</small><button class="save" type="submit" disabled="@Busy">@(_saving ? "Salvataggio…" : "+  Aggiungi al diario")</button>
+            </form>
+        </section><section class="timelinepanel" aria-busy="@_loading"><div class="timelineheading"><div><span class="eyebrow">I MOMENTI DI OGGI</span><h2>La sua piccola storia</h2></div><span class="count">@_entries.Length eventi</span></div>
+            @if (_loading) { <div class="empty" role="status">Stiamo aprendo il diario…</div> }
+            else if (_entries.Length == 0) { <div class="empty"><span aria-hidden="true">✧</span><h3>Una pagina tutta da scrivere</h3><p>Aggiungi il primo momento di questa giornata.<br />Anche le piccole cose meritano un posto.</p></div> }
+            else { <ol class="timeline">@foreach (var entry in _entries.OrderByDescending(e => e.StartedAt)) { <li><time>@Local(entry.StartedAt).ToString("HH:mm")</time><span class="eventdot @entry.Kind" aria-hidden="true">@Symbol(entry.Kind)</span><div class="eventbody"><strong>@Label(entry.Kind)</strong><span>@Detail(entry)</span>@if (!string.IsNullOrWhiteSpace(entry.Notes)) { <p>@entry.Notes</p> }@if (_deleting == entry.Id) { <div class="confirm"><span>Eliminare questo momento?</span><button @onclick="() => DeleteAsync(entry.Id)" disabled="@Busy">Elimina</button><button @onclick="() => _deleting = null" disabled="@Busy">Annulla</button></div> }</div><button class="delete" aria-label="@($"Elimina {Label(entry.Kind)} delle {Local(entry.StartedAt):HH:mm}")" @onclick="() => _deleting = entry.Id" disabled="@Busy">×</button></li> }</ol> }
+            <div class="timelinefoot">♡ &nbsp; Le piccole cose fanno i ricordi più belli.</div>
+        </section></div>
+        @if (_notice is not null) { <div class="notice" role="status">✓ @_notice</div> }
+    </main><footer><span class="brand">babylog<span class="branddot">●</span></span><span>Fatto di piccoli momenti, custoditi con cura.</span><span>Dati fittizi · Solo per dimostrazione</span></footer>
+</div>
+@code {
+    private static readonly TimeZoneInfo Rome = TimeZoneInfo.FindSystemTimeZoneById("Europe/Rome");
+    private static readonly CultureInfo Italian = CultureInfo.GetCultureInfo("it-IT");
+    private BabyProfile? _baby;
+    private DailySummary? _summary;
+    private ActivityEntry[] _entries = [];
+    private DateTime _date = Local(DateTimeOffset.UtcNow).Date;
+    private string _startText = "", _endText = "";
+    private string _kind = "milk", _notes = "";
+    private int _milliliters = 120;
+    private bool _loading, _saving;
+    private Guid? _deleting;
+    private string? _error, _notice;
+    private bool Busy => _loading || _saving;
+    private string DateHeading => _date.ToString("dddd d MMMM yyyy", Italian);
+    private string AgeText => _baby is null ? "" : $"{Math.Max(0, DateOnly.FromDateTime(Local(DateTimeOffset.UtcNow)).DayNumber - _baby.BirthDate.DayNumber)} giorni di meraviglia";
+    private string SleepText => _summary is null ? "—" : $"{_summary.SleepMinutes / 60} h {_summary.SleepMinutes % 60:00} min";
+    protected override async Task OnInitializedAsync() { await LoadAsync(); }
+    private async Task ChangeDay(int days) { _date = _date.AddDays(days); await LoadAsync(); }
+    private async Task TodayAsync() { _date = Local(DateTimeOffset.UtcNow).Date; await LoadAsync(); }
+    private async Task LoadAsync()
+    {
+        _loading = true; _error = null; _deleting = null; _notice = null;
+        var now = Local(DateTimeOffset.UtcNow); var start = _date.Date.Add(now.TimeOfDay);
+        _startText = start.ToString("yyyy-MM-ddTHH:mm", CultureInfo.InvariantCulture);
+        _endText = start.AddHours(1).ToString("yyyy-MM-ddTHH:mm", CultureInfo.InvariantCulture);
+        try
+        {
+            var baby = Gateway.GetBabyAsync(); var entries = Gateway.GetActivitiesAsync(DateOnly.FromDateTime(_date)); var summary = Gateway.GetSummaryAsync(DateOnly.FromDateTime(_date));
+            await Task.WhenAll(baby, entries, summary); _baby = await baby; _entries = await entries; _summary = await summary;
+        }
+        catch (Exception ex) { _entries = []; _summary = null; _error = Friendly(ex); }
+        finally { _loading = false; }
+    }
+    private async Task SaveAsync()
+    {
+        if (Busy) return;
+        _saving = true; _error = null; _notice = null;
+        try
+        {
+            var localStart = ParseLocal(_startText);
+            var start = ToUtc(localStart); var end = _kind == "sleep" ? ToUtc(ParseLocal(_endText)) : (DateTimeOffset?)null;
+            if (end is not null && end <= start) throw new InvalidOperationException("La fine del riposo deve essere successiva all'inizio.");
+            await Gateway.CreateAsync(new(_kind, start, end, _kind == "milk" ? _milliliters : null, _notes));
+            _date = localStart.Date; _notes = ""; await LoadAsync(); _notice = "Momento aggiunto al diario.";
+        }
+        catch (Exception ex) { _error = Friendly(ex); }
+        finally { _saving = false; }
+    }
+    private async Task DeleteAsync(Guid id)
+    {
+        if (Busy) return;
+        _saving = true; _error = null;
+        try { await Gateway.DeleteAsync(id); await LoadAsync(); _notice = "Momento eliminato."; }
+        catch (Exception ex) { _error = Friendly(ex); }
+        finally { _saving = false; }
+    }
+    private static DateTime Local(DateTimeOffset value) => TimeZoneInfo.ConvertTime(value, Rome).DateTime;
+    private static DateTime ParseLocal(string value) => DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.None, out var result)
+        ? result : throw new InvalidOperationException("Indica una data e un orario validi.");
+    private static DateTimeOffset ToUtc(DateTime value)
+    {
+        value = DateTime.SpecifyKind(value, DateTimeKind.Unspecified);
+        if (Rome.IsInvalidTime(value)) throw new InvalidOperationException("Questo orario non esiste per il passaggio all'ora legale. Scegli un altro orario.");
+        if (Rome.IsAmbiguousTime(value)) throw new InvalidOperationException("Questo orario si ripete per il passaggio all'ora solare. Scegli un orario fuori dall'intervallo 02:00–02:59.");
+        return new DateTimeOffset(TimeZoneInfo.ConvertTimeToUtc(value, Rome), TimeSpan.Zero);
+    }
+    private static string Friendly(Exception ex) => ex is HttpRequestException or TaskCanceledException ? "Il diario non è raggiungibile in questo momento. Riprova tra poco." : ex.Message;
+    private static string Label(string kind) => kind switch { "milk" => "Poppata", "diaper" => "Cambio", "sleep" => "Riposo", _ => "Momento" };
+    private static string Symbol(string kind) => kind switch { "milk" => "♧", "diaper" => "◇", _ => "☾" };
+    private static string Detail(ActivityEntry entry) => entry.Kind switch { "milk" => $"{entry.Milliliters} ml di latte", "diaper" => "Un pannolino pulito", "sleep" => $"Fino alle {Local(entry.EndedAt ?? entry.StartedAt):HH:mm} · {(int)((entry.EndedAt ?? entry.StartedAt) - entry.StartedAt).TotalMinutes} min", _ => "" };
+}

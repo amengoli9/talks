@@ -1,0 +1,11 @@
+services:
+  activities:
+    build:
+      secrets: [trusted_ca]
+  summaries:
+    build:
+      secrets: [trusted_ca]
+
+secrets:
+  trusted_ca:
+    file: ${BABYLOG_DISTRIBUTED_CA:?Indicare il percorso di un bundle CA in formato PEM}

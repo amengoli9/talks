@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>BabyLog.Distributed.RabbitMq</AssemblyName>
+    <RootNamespace>BabyLog.Distributed.RabbitMq</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Events/Events.csproj" />
+    <PackageReference Include="RabbitMQ.Client" />
+  </ItemGroup>
+</Project>

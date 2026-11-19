@@ -1,0 +1,65 @@
+name: babylog-security
+services:
+  postgres:
+    image: postgres:17-alpine@sha256:a77aa70e641402a21411b92b721c58d10f23b50ae5fdd2333efd22d166e1e5f7
+    environment:
+      POSTGRES_DB: dtrack
+      POSTGRES_USER: dtrack
+      POSTGRES_PASSWORD: ${DTRACK_DB_PASSWORD:?Run scripts/start-dependency-track.ps1}
+    volumes:
+      - dtrack-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dtrack -d dtrack"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+  dtrack-api:
+    image: dependencytrack/apiserver:4.14.6@sha256:3110dd66ee9d1b4b9a4dc6c51c68c23f14ba006b6e5a74d0b5204e169a1da09a
+    environment:
+      ALPINE_DATABASE_MODE: external
+      ALPINE_DATABASE_URL: jdbc:postgresql://postgres:5432/dtrack
+      ALPINE_DATABASE_DRIVER: org.postgresql.Driver
+      ALPINE_DATABASE_USERNAME: dtrack
+      ALPINE_DATABASE_PASSWORD: ${DTRACK_DB_PASSWORD:?Run scripts/start-dependency-track.ps1}
+      ALPINE_CORS_ENABLED: "true"
+      ALPINE_CORS_ALLOW_ORIGIN: http://localhost:8090
+      JAVA_OPTIONS: -Xms1g -Xmx4g
+    ports:
+      - "127.0.0.1:8091:8080"
+    volumes:
+      - dtrack-data:/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+  dtrack-web:
+    image: dependencytrack/frontend:4.14.6@sha256:f298c3e6061096bf76575a1bbe994528089141856ec7b2ec63469cf3f2abeedf
+    environment:
+      API_BASE_URL: http://localhost:8091
+    ports:
+      - "127.0.0.1:8090:8080"
+    depends_on:
+      - dtrack-api
+    restart: unless-stopped
+  notification-receiver:
+    image: python:3.14-alpine@sha256:5862d971d1f0ae26b258cefa4e893556b1d3aba81bd2ff30888704ad378bab67
+    command: [python, -u, /app/receiver.py]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    ports:
+      - "127.0.0.1:8092:8080"
+    volumes:
+      - ./security/monitoring/receiver.py:/app/receiver.py:ro
+      - dtrack-notifications:/data
+      - ./.artifacts/dependency-track/osv:/osv:ro
+    restart: unless-stopped
+volumes:
+  dtrack-notifications:
+  dtrack-postgres:
+  dtrack-data:
+
+
+
+

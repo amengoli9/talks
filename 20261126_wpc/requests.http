@@ -1,0 +1,29 @@
+@host = http://localhost:5080
+GET {{host}}/health
+
+### Profilo
+GET {{host}}/api/baby
+
+### Diario del giorno
+GET {{host}}/api/activities?date=2026-11-26
+
+### Riepilogo
+GET {{host}}/api/summary?date=2026-11-26
+
+### Poppata
+POST {{host}}/api/activities
+Content-Type: application/json
+
+{"kind":"milk","startedAt":"2026-11-26T09:00:00+01:00","milliliters":120,"notes":"Dopo il risveglio"}
+
+### Cambio
+POST {{host}}/api/activities
+Content-Type: application/json
+
+{"kind":"diaper","startedAt":"2026-11-26T09:30:00+01:00"}
+
+### Sonno
+POST {{host}}/api/activities
+Content-Type: application/json
+
+{"kind":"sleep","startedAt":"2026-11-26T10:00:00+01:00","endedAt":"2026-11-26T11:20:00+01:00"}

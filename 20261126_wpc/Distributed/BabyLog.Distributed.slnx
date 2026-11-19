@@ -1,0 +1,18 @@
+<Solution>
+  <Folder Name="/Activities/">
+    <Project Path="Activities.Domain/Activities.Domain.csproj" />
+    <Project Path="Activities.Application/Activities.Application.csproj" />
+    <Project Path="Activities.Infrastructure/Activities.Infrastructure.csproj" />
+    <Project Path="Activities.Api/Activities.Api.csproj" />
+  </Folder>
+  <Folder Name="/Summaries/">
+    <Project Path="Summaries.Domain/Summaries.Domain.csproj" />
+    <Project Path="Summaries.Application/Summaries.Application.csproj" />
+    <Project Path="Summaries.Infrastructure/Summaries.Infrastructure.csproj" />
+    <Project Path="Summaries.Api/Summaries.Api.csproj" />
+  </Folder>
+  <Folder Name="/Integration/">
+    <Project Path="Events/Events.csproj" />
+    <Project Path="RabbitMq/RabbitMq.csproj" />
+  </Folder>
+</Solution>

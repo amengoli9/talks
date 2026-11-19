@@ -1,0 +1,49 @@
+@activities = http://127.0.0.1:5180
+@summaries = http://127.0.0.1:5181
+@issuer = http://localhost:5182/realms/babylog
+@date = 2026-11-26
+
+### Risposta attesa 401
+GET {{activities}}/api/baby
+
+### Token per Activities
+# @name activitiesToken
+POST {{issuer}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials&client_id=babylog-activities-cli&client_secret=babylog-activities-demo
+
+### Token per Summaries
+# @name summariesToken
+POST {{issuer}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials&client_id=babylog-summaries-cli&client_secret=babylog-summaries-demo
+
+### Registra una poppata
+# @name record
+POST {{activities}}/api/activities
+Content-Type: application/json
+Authorization: Bearer {{activitiesToken.response.body.$.access_token}}
+
+{
+  "kind": "milk",
+  "startedAt": "{{date}}T08:10:00+01:00",
+  "milliliters": 120
+}
+
+### Leggi le attività del giorno
+GET {{activities}}/api/activities?date={{date}}
+Authorization: Bearer {{activitiesToken.response.body.$.access_token}}
+
+### Riprova dopo un secondo per vedere la proiezione
+GET {{summaries}}/api/summary?date={{date}}
+Authorization: Bearer {{summariesToken.response.body.$.access_token}}
+
+### Un token valido per Activities dà 401 su Summaries
+GET {{summaries}}/api/summary?date={{date}}
+Authorization: Bearer {{activitiesToken.response.body.$.access_token}}
+
+### Elimina la poppata e rileggi il riepilogo
+DELETE {{activities}}/api/activities/{{record.response.body.$.id}}
+Authorization: Bearer {{activitiesToken.response.body.$.access_token}}

@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>BabyLog.Distributed.Activities.Application</AssemblyName>
+    <RootNamespace>BabyLog.Distributed.Activities.Application</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Activities.Domain/Activities.Domain.csproj" />
+    <Compile Include="../Shared/RomeDay.cs" Link="RomeDay.cs" />
+  </ItemGroup>
+</Project>

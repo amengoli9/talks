@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>BabyLog.Distributed.Events</AssemblyName>
+    <RootNamespace>BabyLog.Distributed.Events</RootNamespace>
+  </PropertyGroup>
+</Project>

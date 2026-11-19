@@ -1,0 +1,79 @@
+name: babylog-distributed
+
+x-api: &api
+  platform: linux/amd64
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  tmpfs:
+    - /tmp:rw,noexec,nosuid,size=64m,mode=1777
+  environment: &api-environment
+    Keycloak__Issuer: http://localhost:5182/realms/babylog
+    Keycloak__MetadataAddress: http://keycloak:8080/realms/babylog/.well-known/openid-configuration
+    Keycloak__RequireHttpsMetadata: "false"
+    DataProtection__Path: /data/keys
+    RabbitMq__Uri: amqp://babylog:babylog-rabbit-demo@rabbitmq:5672/
+    Logging__LogLevel__Microsoft.EntityFrameworkCore.Database.Command: Warning
+
+services:
+  activities:
+    <<: *api
+    image: babylog-distributed-activities:demo
+    build:
+      context: ..
+      dockerfile: Distributed/Dockerfile
+      target: activities
+    ports:
+      - "127.0.0.1:5180:8080"
+    environment:
+      <<: *api-environment
+      ConnectionStrings__Activities: Data Source=/data/activities.db
+    volumes:
+      - activities-data:/data
+
+  summaries:
+    <<: *api
+    image: babylog-distributed-summaries:demo
+    build:
+      context: ..
+      dockerfile: Distributed/Dockerfile
+      target: summaries
+    ports:
+      - "127.0.0.1:5181:8080"
+    environment:
+      <<: *api-environment
+      ConnectionStrings__Summaries: Data Source=/data/summaries.db
+    volumes:
+      - summaries-data:/data
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.8.2
+    command: [start-dev, --import-realm]
+    environment:
+      KC_HOSTNAME: http://localhost:5182
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: babylog-keycloak-demo
+      JAVA_OPTS_KC_HEAP: -Xms128m -Xmx512m
+    ports:
+      - "127.0.0.1:5182:8080"
+    volumes:
+      - ./keycloak/babylog-realm.json:/opt/keycloak/data/import/babylog-realm.json:ro
+      - keycloak-data:/opt/keycloak/data
+
+  rabbitmq:
+    image: rabbitmq:4.3.7-management
+    hostname: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: babylog
+      RABBITMQ_DEFAULT_PASS: babylog-rabbit-demo
+    ports:
+      - "127.0.0.1:5183:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+
+volumes:
+  activities-data:
+  summaries-data:
+  keycloak-data:
+  rabbitmq-data:
