@@ -8,6 +8,10 @@ $credentialsPath = Join-Path $secretDir "$credentialsName.json"
 $reportDir = Join-Path $root ".artifacts/$credentialsName"
 if ($Standalone -and !$PSBoundParameters.ContainsKey('ApiUrl')) { $ApiUrl = 'http://127.0.0.1:8190' }
 New-Item -ItemType Directory -Force $secretDir,$reportDir | Out-Null
+if ([System.Environment]::OSVersion.Platform -ne [System.PlatformID]::Win32NT) {
+    & chmod 700 $secretDir
+    if ($LASTEXITCODE -ne 0) { throw 'Impossibile restringere i permessi della directory .secrets.' }
+}
 $ApiUrl = $ApiUrl.TrimEnd('/')
 Invoke-WebRequest "$ApiUrl/api/openapi.json" -OutFile (Join-Path $reportDir 'openapi.json')
 if (Test-Path $credentialsPath) { $credentials = Get-Content $credentialsPath -Raw | ConvertFrom-Json }
@@ -78,7 +82,6 @@ $config | Where-Object { $_.propertyName -match 'password|token|key|secret' } | 
 $config | Where-Object { $_.groupName -match 'vuln|analyzer|ossindex|osv|nvd|github' } | Select-Object groupName,propertyName,propertyValue,propertyType | ConvertTo-Json -Depth 8 | Set-Content (Join-Path $reportDir 'feed-configuration.json')
 @{apiUrl=$ApiUrl;bootstrappedAt=[DateTime]::UtcNow.ToString('o');uploadTeamUuid=$team.uuid;uploadPermissions=@($team.permissions.name);policyUuid=$policy.uuid;notificationRuleUuid=$rule.uuid;credentialsFile=".secrets/$credentialsName.json";feedStatus='Configuration recorded. Mirror startup/analysis readiness must be checked; absence of findings is not a clean result.'} | ConvertTo-Json -Depth 8 | Set-Content (Join-Path $reportDir 'bootstrap.json')
 Write-Host "Bootstrap completato. Credenziali salvate in .secrets/$credentialsName.json."
-
 
 
 
