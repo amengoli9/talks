@@ -31,6 +31,14 @@ jobs:
           global-json-file: 20261126_wpc/global.json
       - name: Test, build, SBOM and vulnerability gate
         run: ./rehearse.ps1 -Version $env:GITHUB_SHA -SkipMonitoring
+      - name: Compare package inventories
+        if: ${{ !cancelled() && hashFiles('20261126_wpc/.artifacts/sbom/manifest.json') != '' }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/dependency-graph/sbom" > .artifacts/sbom/github.spdx.json
+          python3 scripts/compare-sbom.py
       - name: Retain SBOM and scanner evidence
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
