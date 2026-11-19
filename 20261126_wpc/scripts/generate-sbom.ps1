@@ -21,7 +21,7 @@ try {
             $image = "babylog:$variant"
             $id = & docker image inspect $image --format '{{.Id}}'
             if ($LASTEXITCODE -ne 0) { throw "Image missing: $image" }
-            Invoke-Trivy @('image','--format','cyclonedx','--output',"/work/.artifacts/sbom/babylog-container-$variant.cdx.json",$image)
+            Invoke-Checked docker @('run','--rm','-v','/var/run/docker.sock:/var/run/docker.sock','-v',"${output}:/reports",$SyftImage,"docker:$image",'-o',"cyclonedx-json=/reports/babylog-container-$variant.cdx.json")
             $manifest += [ordered]@{Name="BabyLog/container-$variant"; Version="$Version-$variant"; ImageId=$id; Bom="babylog-container-$variant.cdx.json"; Scope='Final image OS, .NET runtime and recognized application packages'}
         }
     }

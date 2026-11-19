@@ -1,5 +1,7 @@
 $ErrorActionPreference = 'Stop'
 $SecurityRoot = Split-Path $PSScriptRoot -Parent
+$SyftImage = 'anchore/syft:v1.57.1'
+$GrypeImage = 'anchore/grype:v0.122.1'
 $TrivyImage = 'aquasec/trivy:0.76.2@sha256:8f6bb947dbc528902e11f2f5be52f7b519f6a39d5d148f41166f2040499768fb'
 function Invoke-Checked([string]$Command, [string[]]$Arguments) {
     & $Command @Arguments

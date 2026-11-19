@@ -15,17 +15,16 @@ try {
     } catch { $errors += $_.Exception.Message }
     $totals = @()
     if (!$SkipImages) {
-        try { Invoke-Trivy @('image','--download-db-only') } catch { $errors += $_.Exception.Message }
+        $bomDir = Join-Path $SecurityRoot '.artifacts/sbom'
         foreach ($variant in 'standard','chiseled') {
             try {
-                Invoke-Trivy @('image','--skip-db-update','--scanners','vuln','--format','json','--output',"/work/.artifacts/security/trivy-$variant.json","babylog:$variant")
-                $items = @(Read-TrivyFindings "$output/trivy-$variant.json")
-                $high = @($items | Where-Object Severity -in 'HIGH','CRITICAL')
-                $totals += [ordered]@{Variant=$variant; Total=$items.Count; OS=@($items | Where-Object Class -eq 'os-pkgs').Count; Application=@($items | Where-Object Class -ne 'os-pkgs').Count; HighCritical=$high.Count}
+                Invoke-Checked docker @('run','--rm','-v',"${bomDir}:/sbom:ro",'-v',"${output}:/reports",'-v','babylog-grype-db:/root/.cache/grype',$GrypeImage,"sbom:/sbom/babylog-container-$variant.cdx.json",'-o','json','--file',"/reports/grype-$variant.json")
+                $items = (Get-Content -Raw "$output/grype-$variant.json" | ConvertFrom-Json).matches
+                $high = @($items | Where-Object { $_.vulnerability.severity -in 'High','Critical' })
+                $totals += [ordered]@{Variant=$variant; Total=$items.Count; HighCritical=$high.Count}
                 if ($high.Count) { $findings += "$variant High/Critical=$($high.Count)" }
-            } catch { $errors += "$variant`: $($_.Exception.Message)" }
+            } catch { $errors += $_.Exception.Message }
         }
-        if (Test-Path '.artifacts/trivy-cache/db/metadata.json') { Copy-Item '.artifacts/trivy-cache/db/metadata.json' "$output/trivy-db-metadata.json" }
     }
     [ordered]@{ Gate= $(if($errors.Count){'error'}elseif($findings.Count){'rejected'}else{'passed'}); Errors=$errors; Findings=$findings; Images=$totals; Time=(Get-Date).ToUniversalTime().ToString('o') } | ConvertTo-Json -Depth 8 | Set-Content "$output/gate.json"
     if ($errors.Count) { throw "Security tooling error (reports preserved): $($errors -join '; ')" }
